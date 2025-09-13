@@ -1,7 +1,9 @@
 {
-  "name": "react-app",
+  "name": "cmmg-calendar-analyzer",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
+  "description": "Analise QuadroHorarioAluno.json e exporte para Google Calendar (CSV) e Thunderbird (ICS).",
+  "homepage": ".",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,11 +12,17 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "autoprefixer": "^10.4.21",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.544.0",
+    "postcss": "^8.5.6",
     "react": "^19.1.1",
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.32.0",
+    "@types/node": "^24.3.3",
     "@types/react": "^19.1.9",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^4.7.0",
@@ -22,6 +30,7 @@
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
+    "typescript": "^5.9.2",
     "vite": "^7.1.0"
   }
 }

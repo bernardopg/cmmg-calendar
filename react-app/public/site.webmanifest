@@ -1,0 +1,24 @@
+{
+  "name": "CMMG Calendar Analyzer",
+  "short_name": "CMMG Calendar",
+  "description": "Analise seu QuadroHorarioAluno.json e exporte para Google Calendar (CSV) e Thunderbird (ICS).",
+  "icons": [
+    {
+      "src": "/android-chrome-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android-chrome-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff",
+  "start_url": "/",
+  "display": "standalone",
+  "lang": "pt-BR",
+  "scope": "/",
+  "id": "/"
+}

@@ -12,3 +12,37 @@
 *data/
 *.cache/
 *output/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Documentation artifacts
+*.md.bak
+*.md~
+DOCUMENTATION_SUMMARY.md
+TODO.md.old
+WARP.md.backup
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

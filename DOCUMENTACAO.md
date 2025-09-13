@@ -1,56 +1,95 @@
-# 📚 Documentação Unificada — CMMG Calendar
+<div align="center">
 
-Conversor e analisador de horário acadêmico que transforma o JSON do Quadro de Horário do Aluno em arquivos prontos para importação em calendários e oferece uma interface web para análise.
+# 📚 Documentação Completa
+## CMMG Calendar Analyzer
 
-- Saídas geradas:
-  - CSV para Google Calendar
-  - ICS (iCalendar) para Thunderbird e outros clientes
-- Interface Web: upload do JSON e análise com estatísticas
+*Guia completo para conversão e análise de horários acadêmicos*
 
 ---
 
-## 🧭 Sumário
+🎯 **O que você pode fazer:**
 
-- [📚 Documentação Unificada — CMMG Calendar](#-documentação-unificada--cmmg-calendar)
-  - [🧭 Sumário](#-sumário)
-  - [Visão Geral](#visão-geral)
-  - [Requisitos](#requisitos)
-  - [Estrutura do Projeto](#estrutura-do-projeto)
-  - [Uso Rápido (CLI)](#uso-rápido-cli)
-  - [Importação nos Calendários](#importação-nos-calendários)
-    - [Google Calendar (CSV)](#google-calendar-csv)
-    - [Thunderbird (ICS)](#thunderbird-ics)
-    - [Outros Clientes Compatíveis](#outros-clientes-compatíveis)
-  - [Aplicação Web](#aplicação-web)
-    - [Iniciar (Script recomendado)](#iniciar-script-recomendado)
-    - [Iniciar manualmente](#iniciar-manualmente)
-    - [Como usar a interface](#como-usar-a-interface)
-    - [Portas](#portas)
-  - [Análise via Script](#análise-via-script)
-  - [Resultados Esperados](#resultados-esperados)
-  - [Detalhes dos Formatos](#detalhes-dos-formatos)
-  - [Personalização e Dicas](#personalização-e-dicas)
-  - [Solução de Problemas](#solução-de-problemas)
-  - [Atualizações Futuras](#atualizações-futuras)
+📱 **Google Calendar** • 🗓️ **Thunderbird** • 📊 **Estatísticas** • 🌐 **Interface Web**
+
+</div>
+
+## 📚 Índice Rápido
+
+> 💡 **Dica**: Use Ctrl+F para encontrar rapidamente o que precisa!
+
+| Seção | Descrição | Tempo Estimado |
+|---------|-------------|----------------|
+| [🚀 Início Rápido](#-início-rápido) | Começar em 2 minutos | 2 min |
+| [📱 Google Calendar](#-google-calendar-csv) | Importar para Google | 5 min |
+| [🗓️ Thunderbird](#-thunderbird-ics) | Importar para Thunderbird | 3 min |
+| [🌐 Interface Web](#-interface-web) | Usar a aplicação web | 1 min |
+| [🔧 Solução de Problemas](#-solução-de-problemas) | Resolver dúvidas comuns | - |
 
 ---
 
-## Visão Geral
+## 🗂️ Documentação Adicional
 
-Este projeto converte o arquivo `data/QuadroHorarioAluno.json` em:
+📖 **Guias Detalhados Disponíveis:**
+- 📱 [Importação Google Calendar](docs/guides/GOOGLE_CALENDAR.md)
+- ⚡ [Importação Thunderbird](docs/guides/THUNDERBIRD.md)
+- 🚀 [Guia de Instalação Completo](docs/guides/INSTALLATION.md)
+- 📚 [Índice de Toda Documentação](docs/DOCUMENTATION_INDEX.md)
 
-- `output/GoogleAgenda.csv` (Google Calendar)
-- `output/ThunderbirdAgenda.ics` (Thunderbird e padrão iCalendar)
+---
 
-Além disso, oferece uma aplicação web para upload e análise do JSON com estatísticas e visualizações rápidas.
+---
 
-## Requisitos
+## 🎯 Visão Geral
 
-- Python 3.6+
-- Dependências Python listadas em `requirements.txt`
-- Node.js (para rodar a interface web com Vite/React)
+<div align="center">
 
-Módulos padrão utilizados no conversor: `csv`, `json`, `os`, `datetime`.
+```mermaid
+graph LR
+    A[📄 JSON] --> B[🔄 Processamento]
+    B --> C[📱 Google Calendar CSV]
+    B --> D[🗓️ Thunderbird ICS]
+    B --> E[📊 Análise Web]
+```
+
+</div>
+
+**🎨 O que este projeto faz:**
+
+✨ Transforma seu arquivo JSON de horário acadêmico em calendários organizados
+
+**📦 Formatos de saída:**
+- 📱 **CSV** → `output/GoogleAgenda.csv` (Google Calendar)
+- 🗓️ **ICS** → `output/ThunderbirdAgenda.ics` (Thunderbird e padrão iCalendar)
+- 📊 **Relatório Web** → Estatísticas e análises interativas
+
+**✨ Bônus:**
+- Interface web moderna com drag & drop
+- Análise inteligente de padrões de horário
+- Visualizações de estatísticas
+- API REST para integração
+
+## 💻 Requisitos
+
+<details>
+<summary><strong>🔵 Requisitos Mínimos</strong></summary>
+
+| Componente | Versão | Obrigatório para |
+|-----------|-------|------------------|
+| 🐍 Python | 3.6+ | CLI + API |
+| 📦 Node.js | 16+ | Interface Web |
+| 💾 Espaço | ~50MB | Instalação |
+
+**🔧 Dependências Python:**
+```bash
+pip install -r requirements.txt
+```
+
+**🎨 Dependências Frontend:**
+```bash
+cd react-app && npm install
+```
+
+</details>
 
 ## Estrutura do Projeto
 
@@ -71,20 +110,45 @@ cmmg-calendar/
 
 ---
 
-## Uso Rápido (CLI)
+## 🚀 Início Rápido
 
-1. Executar o conversor
+> 🏁 **Meta**: Ter seus horários no calendário em menos de 5 minutos!
+
+### 🔥 Opção 1: Interface Web (Recomendada)
 
 ```bash
+# 1. Clone e entre no projeto
+git clone <seu-repo>
+cd cmmg-calendar
+
+# 2. Execute o script mágico 🪄
+./start_app.sh
+
+# 3. Abra no navegador
+# 🌐 http://localhost:5173
+```
+
+### ⚡ Opção 2: CLI Rápido
+
+```bash
+# 1. Configure o ambiente
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate     # Windows
+
+# 2. Instale dependências
+pip install -r requirements.txt
+
+# 3. Coloque seu JSON em data/QuadroHorarioAluno.json
+# 4. Execute a conversão
 python main.py
 ```
 
-1. Arquivos gerados
+✅ **Arquivos gerados:**
+- 📱 `output/GoogleAgenda.csv` (Google Calendar)
+- 🗓️ `output/ThunderbirdAgenda.ics` (Thunderbird/outros)
 
-- `output/GoogleAgenda.csv` (Google)
-- `output/ThunderbirdAgenda.ics` (Thunderbird/iCalendar)
-
-1. Importar nos calendários: consulte as seções abaixo.
+📍 **Próximo passo:** [Importar nos calendários](#-google-calendar-csv)
 
 ---
 
