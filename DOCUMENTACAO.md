@@ -1,322 +1,283 @@
-<div align="center">
+# Documentação Completa
 
-# 📚 Documentação Completa
-## CMMG Calendar Analyzer
+Guia oficial de uso, instalação e integração do projeto CMMG Calendar Analyzer.
 
-*Guia completo para conversão e análise de horários acadêmicos*
+## Sumário
 
----
+1. [Visão geral](#visão-geral)
+2. [Requisitos](#requisitos)
+3. [Instalação](#instalação)
+4. [Uso pela interface web](#uso-pela-interface-web)
+5. [Uso via CLI](#uso-via-cli)
+6. [API REST](#api-rest)
+7. [Formato do JSON de entrada](#formato-do-json-de-entrada)
+8. [Formato dos arquivos de saída](#formato-dos-arquivos-de-saída)
+9. [Solução de problemas](#solução-de-problemas)
+10. [Créditos](#créditos)
 
-🎯 **O que você pode fazer:**
+## Visão geral
 
-📱 **Google Calendar** • 🗓️ **Thunderbird** • 📊 **Estatísticas** • 🌐 **Interface Web**
+O CMMG Calendar Analyzer recebe um JSON acadêmico (`QuadroHorarioAluno.json`) e permite:
 
-</div>
+- analisar a grade de horários;
+- exportar para CSV compatível com Google Calendar;
+- exportar para ICS compatível com Thunderbird e outros clientes iCalendar.
 
-## 📚 Índice Rápido
+Formas de uso disponíveis:
 
-> 💡 **Dica**: Use Ctrl+F para encontrar rapidamente o que precisa!
+- Interface web (React + API Flask)
+- API REST
+- CLI local
 
-| Seção | Descrição | Tempo Estimado |
-|---------|-------------|----------------|
-| [🚀 Início Rápido](#-início-rápido) | Começar em 2 minutos | 2 min |
-| [📱 Google Calendar](#-google-calendar-csv) | Importar para Google | 5 min |
-| [🗓️ Thunderbird](#-thunderbird-ics) | Importar para Thunderbird | 3 min |
-| [🌐 Interface Web](#-interface-web) | Usar a aplicação web | 1 min |
-| [🔧 Solução de Problemas](#-solução-de-problemas) | Resolver dúvidas comuns | - |
+## Requisitos
 
----
+- Python 3.10+
+- Node.js 18+
+- npm 9+
 
-## 🗂️ Documentação Adicional
+Dependências do backend:
 
-📖 **Guias Detalhados Disponíveis:**
-- 📱 [Importação Google Calendar](docs/guides/GOOGLE_CALENDAR.md)
-- ⚡ [Importação Thunderbird](docs/guides/THUNDERBIRD.md)
-- 🚀 [Guia de Instalação Completo](docs/guides/INSTALLATION.md)
-- 📚 [Índice de Toda Documentação](docs/DOCUMENTATION_INDEX.md)
-
----
-
----
-
-## 🎯 Visão Geral
-
-<div align="center">
-
-```mermaid
-graph LR
-    A[📄 JSON] --> B[🔄 Processamento]
-    B --> C[📱 Google Calendar CSV]
-    B --> D[🗓️ Thunderbird ICS]
-    B --> E[📊 Análise Web]
-```
-
-</div>
-
-**🎨 O que este projeto faz:**
-
-✨ Transforma seu arquivo JSON de horário acadêmico em calendários organizados
-
-**📦 Formatos de saída:**
-- 📱 **CSV** → `output/GoogleAgenda.csv` (Google Calendar)
-- 🗓️ **ICS** → `output/ThunderbirdAgenda.ics` (Thunderbird e padrão iCalendar)
-- 📊 **Relatório Web** → Estatísticas e análises interativas
-
-**✨ Bônus:**
-- Interface web moderna com drag & drop
-- Análise inteligente de padrões de horário
-- Visualizações de estatísticas
-- API REST para integração
-
-## 💻 Requisitos
-
-<details>
-<summary><strong>🔵 Requisitos Mínimos</strong></summary>
-
-| Componente | Versão | Obrigatório para |
-|-----------|-------|------------------|
-| 🐍 Python | 3.6+ | CLI + API |
-| 📦 Node.js | 16+ | Interface Web |
-| 💾 Espaço | ~50MB | Instalação |
-
-**🔧 Dependências Python:**
 ```bash
 pip install -r requirements.txt
 ```
 
-**🎨 Dependências Frontend:**
-```bash
-cd react-app && npm install
-```
-
-</details>
-
-## Estrutura do Projeto
-
-```text
-cmmg-calendar/
-├── main.py                     # Gera CSV + ICS a partir do JSON
-├── analyze_schedule.py         # Analisa dados e mostra estatísticas no terminal
-├── api_server.py               # API Flask para a interface web
-├── start_app.sh                # Script que sobe API + React
-├── data/
-│   └── QuadroHorarioAluno.json # Arquivo JSON de entrada
-├── output/
-│   ├── GoogleAgenda.csv        # CSV para Google Calendar
-│   └── ThunderbirdAgenda.ics   # ICS para Thunderbird/Outros
-├── react-app/                  # Aplicação React (frontend)
-└── DOCUMENTACAO.md             # Este arquivo (documentação unificada)
-```
-
----
-
-## 🚀 Início Rápido
-
-> 🏁 **Meta**: Ter seus horários no calendário em menos de 5 minutos!
-
-### 🔥 Opção 1: Interface Web (Recomendada)
-
-```bash
-# 1. Clone e entre no projeto
-git clone <seu-repo>
-cd cmmg-calendar
-
-# 2. Execute o script mágico 🪄
-./start_app.sh
-
-# 3. Abra no navegador
-# 🌐 http://localhost:5173
-```
-
-### ⚡ Opção 2: CLI Rápido
-
-```bash
-# 1. Configure o ambiente
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
-
-# 2. Instale dependências
-pip install -r requirements.txt
-
-# 3. Coloque seu JSON em data/QuadroHorarioAluno.json
-# 4. Execute a conversão
-python main.py
-```
-
-✅ **Arquivos gerados:**
-- 📱 `output/GoogleAgenda.csv` (Google Calendar)
-- 🗓️ `output/ThunderbirdAgenda.ics` (Thunderbird/outros)
-
-📍 **Próximo passo:** [Importar nos calendários](#-google-calendar-csv)
-
----
-
-## Importação nos Calendários
-
-### Google Calendar (CSV)
-
-1. Acesse <https://calendar.google.com> e faça login
-2. No menu esquerdo, em “Outros calendários”, clique no ícone “+”
-3. Escolha “Importar”
-4. Selecione o arquivo `output/GoogleAgenda.csv`
-5. Escolha o calendário de destino (dica: crie um "Aulas CMMG")
-6. Confirme em “Importar”
-
-Recomendações:
-
-- Garanta fuso horário em Configurações → Fuso horário → America/Sao_Paulo
-- O arquivo CSV usa datas no formato MM/DD/YYYY
-
-### Thunderbird (ICS)
-
-Método via menu:
-
-1. Abra o Thunderbird → aba “Agenda” (Ctrl+Shift+C)
-2. Arquivo → Importar → Calendário → Avançar
-3. “No disco rígido” → Avançar
-4. Selecione `output/ThunderbirdAgenda.ics` → Abrir
-
-Alternativas:
-
-- Arrastar e soltar o `.ics` na Agenda
-- “Abrir com → Thunderbird” diretamente pelo gerenciador de arquivos
-
-Após importar, personalize nas Propriedades do calendário (nome, cor e lembretes).
-
-### Outros Clientes Compatíveis
-
-O `.ics` é padrão iCalendar (RFC 5545) e funciona em:
-
-- Evolution, KDE Kontact (Linux)
-- Apple Calendar (macOS)
-- Outlook (Windows/macOS)
-- Google Calendar (upload de `.ics` também funciona)
-
----
-
-## Aplicação Web
-
-Interface para enviar o JSON e ver estatísticas organizadas.
-
-### Iniciar (Script recomendado)
-
-```bash
-./start_app.sh
-```
-
-Acesse <http://localhost:5173>
-
-### Iniciar manualmente
-
-Em dois terminais:
-
-Backend (API Flask):
-
-```bash
-python3 api_server.py
-```
-
-Frontend (React):
+Dependências do frontend:
 
 ```bash
 cd react-app
+npm install
+```
+
+## Instalação
+
+### Execução rápida (web)
+
+```bash
+git clone https://github.com/bernardopg/cmmg-calendar.git
+cd cmmg-calendar
+./start_app.sh
+```
+
+Serviços disponíveis:
+
+- Frontend: <http://localhost:5173>
+- API: <http://localhost:5000>
+
+### Execução manual
+
+Terminal 1 (API):
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python api_server.py
+```
+
+Terminal 2 (frontend):
+
+```bash
+cd react-app
+npm install
 npm run dev
 ```
 
-### Como usar a interface
+## Uso pela interface web
 
-1. Abra <http://localhost:5173>
-2. Clique em “📁 Selecionar arquivo JSON” (ou arraste/solte)
-3. Escolha `data/QuadroHorarioAluno.json`
-4. Clique em “🔍 Analisar Horário”
-5. Veja estatísticas: matérias, horários, locais, dias, meses etc.
+1. Abra `http://localhost:5173`
+2. Faça upload do arquivo JSON
+3. Clique em **Analisar Horário**
+4. Revise estatísticas e distribuições
+5. Exporte em CSV ou ICS
 
-### Portas
+## Uso via CLI
 
-- API: <http://localhost:5000>
-- React: <http://localhost:5173>
+### Conversão para CSV + ICS
 
----
+Pré-requisito:
 
-## Análise via Script
+- arquivo de entrada em `data/QuadroHorarioAluno.json`
 
-Para estatísticas no terminal:
+Comando:
+
+```bash
+python main.py
+```
+
+Saída:
+
+- `output/GoogleAgenda.csv`
+- `output/ThunderbirdAgenda.ics`
+
+### Análise estatística em terminal
 
 ```bash
 python analyze_schedule.py
 ```
 
-Exibe, por exemplo:
+## API REST
 
-- Total de eventos por matéria
-- Distribuição por horários
-- Locais mais utilizados
-- Distribuição por mês e por dia da semana
+Base URL padrão: `http://localhost:5000`
 
----
+### `GET /health`
 
-## Resultados Esperados
+Retorna status da API.
 
-- ~677 eventos processados (dependendo do JSON)
-- Período típico: agosto a dezembro de 2025
-- Exemplos de insights (variáveis conforme dados):
-  - Matérias mais frequentes
-  - Horários mais comuns (ex.: 14:20–15:10)
-  - Locais principais de aula
+Resposta esperada:
 
----
+```json
+{
+  "status": "up",
+  "message": "API funcionando"
+}
+```
 
-## Detalhes dos Formatos
+### `POST /analyze`
 
-- Título (SUMMARY): nome da matéria (`NOME`)
-- Datas: `DATAINICIAL`/`DATAFINAL`
-- Horários: `HORAINICIAL`/`HORAFINAL`
-- Local (LOCATION): prédio, bloco e sala
-- Descrição: códigos de turma e informações adicionais
+Recebe `multipart/form-data` com campo `file` (JSON) e retorna estatísticas.
 
-Diferenças entre CSV e ICS:
+Exemplo:
 
-- CSV (Google)
-  - Datas: MM/DD/YYYY
-  - Eventos privados por padrão
-  - Fuso: implícito no calendário
-- ICS (Thunderbird/iCalendar)
-  - Datas/horas: YYYYMMDDTHHMMSS
-  - UID único por evento
-  - Fuso recomendado: America/Sao_Paulo
-  - Estrutura VCALENDAR/VEVENT
+```bash
+curl -X POST -F "file=@data/QuadroHorarioAluno.json" http://localhost:5000/analyze
+```
 
----
+### `POST /export/csv`
 
-## Personalização e Dicas
+Aceita:
 
-- Crie um calendário separado “Aulas CMMG” para organizar melhor
-- Atribua cores por matéria ou tipo de aula
-- Lembretes sugeridos:
-  - 15 minutos antes (notificação)
-  - 1 hora antes (email, opcional)
-  - 1 dia antes (preparação)
+- `multipart/form-data` com campo `file`, ou
+- JSON diretamente no corpo da requisição.
 
----
+Retorna arquivo CSV para download.
 
-## Solução de Problemas
+Exemplo com arquivo:
 
-Arquivo/execução
+```bash
+curl -X POST -F "file=@data/QuadroHorarioAluno.json" \
+  http://localhost:5000/export/csv -o GoogleAgenda.csv
+```
 
-- “Arquivo não encontrado”: confirme `data/QuadroHorarioAluno.json`
-- Poucos eventos importados: alguns duplicados podem ser filtrados
+### `POST /export/ics`
 
-Datas/fuso horário
+Aceita:
 
-- Eventos no horário errado: ajuste para America/Sao_Paulo
-  - Google → Configurações → Fuso horário
-  - Thunderbird → Configurações → Calendário → Fuso horário
+- `multipart/form-data` com campo `file`, ou
+- JSON diretamente no corpo da requisição.
 
-Google Calendar
+Retorna arquivo ICS para download.
 
-- “Formato não suportado”: confirme extensão `.csv` gerada pelo script
-- “Erro ao processar datas”: verifique fuso e formato MM/DD/YYYY
+Exemplo com arquivo:
+
+```bash
+curl -X POST -F "file=@data/QuadroHorarioAluno.json" \
+  http://localhost:5000/export/ics -o ThunderbirdAgenda.ics
+```
+
+## Formato do JSON de entrada
+
+Estrutura esperada:
+
+```json
+{
+  "data": {
+    "SHorarioAluno": [
+      {
+        "NOME": "Matemática",
+        "DATAINICIAL": "2025-03-10T00:00:00",
+        "DATAFINAL": "2025-03-10T00:00:00",
+        "HORAINICIAL": "08:00:00",
+        "HORAFINAL": "10:00:00",
+        "PREDIO": "Campus",
+        "BLOCO": "A",
+        "SALA": "101",
+        "CODTURMA": "MAT01",
+        "DIASEMANA": "1"
+      }
+    ]
+  }
+}
+```
+
+Campos mais relevantes para exportação:
+
+- `NOME`
+- `DATAINICIAL`
+- `DATAFINAL` (opcional; usa `DATAINICIAL` como fallback)
+- `HORAINICIAL`
+- `HORAFINAL`
+- `PREDIO`, `BLOCO`, `SALA`
+- `CODTURMA`, `CODSUBTURMA`, `NOMEREDUZIDO`, `URLAULAONLINE`
+
+## Formato dos arquivos de saída
+
+### CSV (`GoogleAgenda.csv`)
+
+Colunas:
+
+- Subject
+- Start Date
+- Start Time
+- End Date
+- End Time
+- All Day Event
+- Description
+- Location
+- Private
+
+Observações:
+
+- datas em formato `MM/DD/YYYY`
+- compatível com importação do Google Calendar
+
+### ICS (`ThunderbirdAgenda.ics`)
+
+Formato iCalendar (`VCALENDAR` + `VEVENT`) com:
+
+- `UID` único por evento
+- `DTSTAMP` em UTC
+- `DTSTART` e `DTEND`
+- `SUMMARY`, `DESCRIPTION`, `LOCATION`
+
+## Solução de problemas
+
+### Arquivo não encontrado na CLI
+
+Erro comum:
+
+- `data/QuadroHorarioAluno.json` inexistente.
+
+Solução:
+
+- crie a pasta `data/` e coloque o arquivo com esse nome;
+- ou adapte o caminho em `main.py`.
+
+### API retornando erro 400
+
+Causas comuns:
+
+- campo `file` ausente no multipart;
+- arquivo não é `.json`;
+- JSON malformado;
+- estrutura sem `data.SHorarioAluno`.
+
+### Frontend sem conexão com API
+
+Verifique:
+
+- API rodando na porta 5000;
+- frontend rodando na porta 5173;
+- proxy configurado em `react-app/vite.config.js`.
+
+## Créditos
+
+Projeto desenvolvido e mantido por:
+
+- Bernardo Gomes
+- E-mail: <bernardo.gomes@bebitterbebetter.com.br>
+- Site: bebitterbebetter.com.br
+- Instagram/X: @be.pgomes
+- GitHub: [bernardopg](https://github.com/bernardopg)
 
 Thunderbird
 

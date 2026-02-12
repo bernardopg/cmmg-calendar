@@ -5,8 +5,8 @@
 
 echo "🎓 Configurando Analisador de Horário Acadêmico..."
 
-# Diretório base
-BASE_DIR="/home/bitter/dev/cmmg-calendar"
+# Diretório base (resolve automaticamente a partir da localização do script)
+BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$BASE_DIR"
 
 # Instalar dependências Python se necessário

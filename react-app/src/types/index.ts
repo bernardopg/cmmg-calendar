@@ -1,5 +1,5 @@
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -7,7 +7,7 @@ export interface ApiResponse<T = any> {
 }
 
 export interface HealthResponse {
-  status: 'up' | 'down';
+  status: "up" | "down";
   timestamp: string;
   version?: string;
 }
@@ -59,14 +59,14 @@ export interface FileDropzoneProps {
 }
 
 export interface StatusBadgeProps {
-  status: 'up' | 'down' | 'checking';
+  status: "up" | "down" | "checking";
   children: React.ReactNode;
 }
 
 export interface LoadingButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean;
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  variant?: "primary" | "secondary" | "outline" | "ghost";
+  size?: "sm" | "md" | "lg";
   children: React.ReactNode;
 }
 
@@ -74,7 +74,7 @@ export interface StatisticsCardProps {
   title: string;
   icon: React.ReactNode;
   data: Record<string, number> | AnalysisStatistics;
-  type?: 'list' | 'stats';
+  type?: "list" | "stats";
 }
 
 export interface ExportButtonsProps {
@@ -85,7 +85,7 @@ export interface ExportButtonsProps {
 
 // Hook Types
 export interface UseApiHealthReturn {
-  status: 'up' | 'down' | 'checking';
+  status: "up" | "down" | "checking";
   isOnline: boolean;
   isChecking: boolean;
 }
@@ -95,6 +95,7 @@ export interface UseFileUploadReturn {
   setFile: (file: File | null) => void;
   rawJson: ScheduleData | null;
   setRawJson: (data: ScheduleData | null) => void;
+  processFile: (file: File | null) => Promise<void>;
   handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   handleFileDrop: (file: File) => Promise<void>;
   clearFile: () => void;
@@ -109,11 +110,20 @@ export interface UseScheduleAnalysisReturn {
 }
 
 // Utility Types
-export type ApiStatus = 'up' | 'down' | 'checking';
+export type ApiStatus = "up" | "down" | "checking";
 
-export type ExportFormat = 'csv' | 'ics';
+export type ExportFormat = "csv" | "ics";
 
-export type ThemeMode = 'light' | 'dark' | 'system';
+export type ThemeMode = "light" | "dark" | "system";
+
+export type ToastVariant = "success" | "error";
+
+export interface Toast {
+  id: string;
+  title: string;
+  message?: string;
+  variant: ToastVariant;
+}
 
 // Form Types
 export interface UploadFormData {
@@ -124,7 +134,7 @@ export interface UploadFormData {
 export interface AppError {
   message: string;
   code?: string;
-  details?: any;
+  details?: unknown;
 }
 
 // Export utilities

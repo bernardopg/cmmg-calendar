@@ -1,179 +1,123 @@
-<div align="center">
+# CMMG Calendar Analyzer
 
-# 📅 CMMG Calendar Analyzer
+Converte o arquivo `QuadroHorarioAluno.json` em calendários utilizáveis (CSV para Google Calendar e ICS para Thunderbird/Outros) e oferece análise estatística via Web, API e CLI.
 
-*Transforme seu horário acadêmico em calendários organizados*
+## Status
 
-[![Demo](https://img.shields.io/badge/🚀_Demo-Live-brightgreen)](#demonstração)
-[![License](https://img.shields.io/badge/📄_License-MIT-blue)](#licença)
-[![Python](https://img.shields.io/badge/🐍_Python-3.6+-blue)](#requisitos)
-[![TypeScript](https://img.shields.io/badge/📘_TypeScript-React-blue)](#tecnologias)
-[![Status](https://img.shields.io/badge/✅_Status-Production_Ready-success)](#status)
+- Backend Flask funcional (`api_server.py`)
+- Frontend React + TypeScript funcional (`react-app/`)
+- Exportação CSV e ICS funcional (`exports.py`)
+- CLI funcional para geração local (`main.py`)
 
----
+## Principais Recursos
 
-**Converta arquivos JSON de horário acadêmico para Google Calendar e Thunderbird com análise inteligente**
+- Conversão de horários acadêmicos para:
+  - `GoogleAgenda.csv` (Google Calendar)
+  - `ThunderbirdAgenda.ics` (Thunderbird, Outlook, Apple Calendar e clientes compatíveis com iCalendar)
+- Análise de dados de horário:
+  - total de registros válidos/inválidos
+  - distribuição por disciplinas, horários, locais, dias e meses
+- Interface web com upload de arquivo e exportação
+- API REST para integração com outros sistemas
 
-![CMMG Calendar Preview](docs/images/preview.png)
+## Requisitos
 
-</div>
+- Python 3.10+
+- Node.js 18+
+- npm 9+
+- Sistema Linux, macOS ou Windows
 
-## ✨ Principais Recursos
+## Início Rápido
 
-🎯 **Conversão Inteligente**
-- 📱 **CSV** → Google Calendar (formato otimizado)
-- 🗓️ **ICS** → Thunderbird, Outlook, Apple Calendar
-- 🔄 **Processamento automático** de datas e horários
-
-📊 **Análise Avançada**
-- 📈 **Estatísticas completas** de matérias e horários
-- 📍 **Mapeamento de locais** e salas
-- 📅 **Distribuição temporal** (semanal/mensal)
-- 🎨 **Visualizações interativas**
-
-🚀 **Interface Moderna**
-- 💻 **Web App** responsiva com drag & drop
-- ⚡ **CLI** para automação
-- 🌐 **API REST** para integração
-- 📱 **PWA Ready** com ícones personalizados
-
-## 🚀 Início Rápido
-
-### 🌐 Interface Web (Recomendado)
+### Opção 1: Web (recomendada)
 
 ```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/cmmg-calendar
+git clone https://github.com/bernardopg/cmmg-calendar.git
 cd cmmg-calendar
-
-# Inicie a aplicação completa
 ./start_app.sh
 ```
 
-**✅ Pronto!** Acesse: [http://localhost:5173](http://localhost:5173)
+Abra:
 
-### ⚡ Via Linha de Comando
+- Frontend: <http://localhost:5173>
+- API: <http://localhost:5000>
+
+### Opção 2: CLI
 
 ```bash
-# Configure o ambiente
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-# ou
-venv\Scripts\activate     # Windows
-
-# Instale dependências
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
-
-# Converta seu arquivo
 python main.py
 ```
 
-**📂 Arquivos gerados:**
-- `output/GoogleAgenda.csv` → 📱 Google Calendar
-- `output/ThunderbirdAgenda.ics` → 🗓️ Thunderbird/Outros
+Arquivos gerados:
 
-## 📱 Como Usar
+- `output/GoogleAgenda.csv`
+- `output/ThunderbirdAgenda.ics`
 
-<details>
-<summary><strong>🌐 Interface Web</strong></summary>
+## Uso por Interface
 
-1. **📤 Upload**: Arraste seu `QuadroHorarioAluno.json` ou clique para selecionar
-2. **🔍 Análise**: Clique em "Analisar Horário" para ver estatísticas
-3. **📊 Resultados**: Visualize distribuição de matérias, horários e locais
-4. **💾 Download**: Baixe CSV para Google Calendar ou ICS para outros aplicativos
+1. Abra `http://localhost:5173`
+2. Envie o arquivo JSON do horário
+3. Clique em **Analisar Horário**
+4. Exporte CSV ou ICS pelo painel de resultados
 
-</details>
+## API (resumo)
 
-<details>
-<summary><strong>⚡ Linha de Comando</strong></summary>
+- `GET /health`
+- `POST /analyze` (multipart com `file`)
+- `POST /export/csv` (multipart com `file` ou JSON no body)
+- `POST /export/ics` (multipart com `file` ou JSON no body)
 
-```bash
-# Conversão simples
-python main.py
-
-# Análise detalhada
-python analyze_schedule.py
-
-# Servidor API
-python api_server.py
-```
-
-</details>
-
-<details>
-<summary><strong>🔗 API REST</strong></summary>
+Exemplo:
 
 ```bash
-# Health check
-curl http://localhost:5000/health
-
-# Análise de arquivo
-curl -X POST -F "file=@data/QuadroHorarioAluno.json" \
-     http://localhost:5000/analyze
-
-# Export CSV
-curl -X POST -F "file=@data/QuadroHorarioAluno.json" \
-     http://localhost:5000/export/csv -o agenda.csv
+curl -X POST -F "file=@data/QuadroHorarioAluno.json" http://localhost:5000/analyze
 ```
 
-</details>
+## Estrutura do Projeto
 
-## 🏗️ Tecnologias
+```text
+cmmg-calendar/
+├── api_server.py
+├── main.py
+├── analyze_schedule.py
+├── exports.py
+├── start_app.sh
+├── src/                 # arquitetura modular em evolução
+├── react-app/
+└── docs/
+```
 
-### Backend
-- 🐍 **Python 3.6+** com Flask
-- 🔒 **Validação** com Pydantic
-- ⚡ **Rate Limiting** e CORS
-- 📝 **Logging** estruturado
+## Documentação
 
-### Frontend
-- ⚛️ **React 19** + **TypeScript**
-- ⚡ **Vite** para desenvolvimento rápido
-- 🎨 **Tailwind CSS** para estilização
-- 📱 **Responsive Design**
-- 🔄 **Custom Hooks** para gerenciamento de estado
+- Visão geral: [DOCUMENTACAO.md](DOCUMENTACAO.md)
+- Índice de documentação: [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)
+- Instalação: [docs/guides/INSTALLATION.md](docs/guides/INSTALLATION.md)
+- Interface web: [docs/guides/WEB_INTERFACE.md](docs/guides/WEB_INTERFACE.md)
+- API: [docs/guides/API_REFERENCE.md](docs/guides/API_REFERENCE.md)
+- Google Calendar: [docs/guides/GOOGLE_CALENDAR.md](docs/guides/GOOGLE_CALENDAR.md)
+- Thunderbird: [docs/guides/THUNDERBIRD.md](docs/guides/THUNDERBIRD.md)
 
-### Recursos Avançados
-- 🛡️ **Validação robusta** de dados
-- 📊 **Análise estatística** automática
-- 🌐 **PWA** com manifest e ícones
-- 🔄 **Drag & Drop** de arquivos
-- ⚡ **Loading states** e feedback visual
+## Contribuição
 
-## 📋 Requisitos
+Consulte [CONTRIBUTING.md](CONTRIBUTING.md).
 
-- 🐍 Python 3.6+
-- 📦 Node.js 16+ (para interface web)
-- 💾 ~50MB espaço em disco
+## Segurança
 
-## 📖 Documentação Completa
+Consulte [SECURITY.md](SECURITY.md).
 
-📚 **[DOCUMENTACAO.md](DOCUMENTACAO.md)** - Guia completo com:
-- 🎯 Importação detalhada para cada calendário
-- 🛠️ Solução de problemas comuns
-- 🎨 Personalização e dicas avançadas
-- 📱 Configuração de PWA
+## Licença
 
-## 🤝 Contribuição
+Este projeto está sob licença MIT. Consulte [LICENSE](LICENSE).
 
-Contribuições são bem-vindas! Por favor:
+## Créditos
 
-1. 🍴 Fork o projeto
-2. 🌿 Crie uma branch: `git checkout -b feature/nova-funcionalidade`
-3. 💾 Commit suas mudanças: `git commit -m 'Add: nova funcionalidade'`
-4. 📤 Push para a branch: `git push origin feature/nova-funcionalidade`
-5. 🔄 Abra um Pull Request
+Autor e mantenedor:
 
-## 📄 Licença
-
-Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
-
----
-
-<div align="center">
-
-**🎓 Desenvolvido para facilitar a vida acadêmica**
-
-⭐ Não esqueça de dar uma estrela se este projeto te ajudou!
-
-</div>
+- Bernardo Gomes
+- E-mail: <bernardo.gomes@bebitterbebetter.com.br>
+- Site: bebitterbebetter.com.br
+- Instagram/X: @be.pgomes
+- GitHub: [bernardopg](https://github.com/bernardopg)

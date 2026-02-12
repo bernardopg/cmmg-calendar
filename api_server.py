@@ -268,7 +268,7 @@ def analyze_schedule():
                 jsonify(
                     APIResponse(
                         success=False, error="Nenhum arquivo foi enviado"
-                    ).dict()
+                    ).model_dump()
                 ),
                 400,
             )
@@ -280,7 +280,7 @@ def analyze_schedule():
                 jsonify(
                     APIResponse(
                         success=False, error="Nenhum arquivo selecionado"
-                    ).dict()
+                    ).model_dump()
                 ),
                 400,
             )
@@ -292,7 +292,7 @@ def analyze_schedule():
                 jsonify(
                     APIResponse(
                         success=False, error="Arquivo deve ser do tipo JSON"
-                    ).dict()
+                    ).model_dump()
                 ),
                 400,
             )
@@ -306,7 +306,7 @@ def analyze_schedule():
                     APIResponse(
                         success=False,
                         error=f"Arquivo muito grande. Máximo: {config['MAX_FILE_SIZE']}MB",
-                    ).dict()
+                    ).model_dump()
                 ),
                 413,
             )
@@ -319,7 +319,7 @@ def analyze_schedule():
             logger.error(f"JSON inválido de {client_ip}: {str(jde)}")
             return (
                 jsonify(
-                    APIResponse(success=False, error="Arquivo JSON inválido").dict()
+                    APIResponse(success=False, error="Arquivo JSON inválido").model_dump()
                 ),
                 400,
             )
@@ -328,22 +328,22 @@ def analyze_schedule():
         result = analyze_schedule_data_json(json_data)
         logger.info(f"Análise concluída com sucesso para {client_ip}")
 
-        return jsonify(APIResponse(success=True, data=result).dict())
+        return jsonify(APIResponse(success=True, data=result).model_dump())
 
     except APIValidationError as ave:
         logger.warning(f"Erro de validação para {client_ip}: {str(ave)}")
         return (
-            jsonify(APIResponse(success=False, error=str(ave)).dict()),
+            jsonify(APIResponse(success=False, error=str(ave)).model_dump()),
             ave.status_code,
         )
     except ProcessingError as pe:
         logger.error(f"Erro de processamento para {client_ip}: {str(pe)}")
-        return jsonify(APIResponse(success=False, error=str(pe)).dict()), pe.status_code
+        return jsonify(APIResponse(success=False, error=str(pe)).model_dump()), pe.status_code
     except Exception as e:
         logger.critical(f"Erro interno para {client_ip}: {str(e)}", exc_info=True)
         return (
             jsonify(
-                APIResponse(success=False, error="Erro interno do servidor").dict()
+                APIResponse(success=False, error="Erro interno do servidor").model_dump()
             ),
             500,
         )
@@ -373,10 +373,7 @@ def export_csv():
                     400,
                 )
         else:
-            try:
-                json_data = request.get_json(silent=True)
-            except Exception:  # noqa: BLE001
-                json_data = None
+            json_data = request.get_json(silent=True)
         if not isinstance(json_data, dict):
             return jsonify({"success": False, "error": "JSON ausente ou inválido"}), 400
         horarios = extract_horarios(json_data)
@@ -387,8 +384,12 @@ def export_csv():
             mimetype="text/csv; charset=utf-8",
             headers={"Content-Disposition": "attachment; filename=GoogleAgenda.csv"},
         )
-    except Exception as e:  # noqa: BLE001
-        return jsonify({"success": False, "error": f"Erro interno: {e}"}), 500
+    except (json.JSONDecodeError, ValueError, KeyError, TypeError) as e:
+        logger.error(f"Erro ao exportar CSV: {e}")
+        return jsonify({"success": False, "error": f"Erro ao processar dados: {e}"}), 400
+    except Exception as e:
+        logger.critical(f"Erro inesperado ao exportar CSV: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Erro interno do servidor"}), 500
 
 
 @app.route("/export/ics", methods=["POST"])
@@ -406,10 +407,7 @@ def export_ics():
                     400,
                 )
         else:
-            try:
-                json_data = request.get_json(silent=True)
-            except Exception:  # noqa: BLE001
-                json_data = None
+            json_data = request.get_json(silent=True)
         if not isinstance(json_data, dict):
             return jsonify({"success": False, "error": "JSON ausente ou inválido"}), 400
         horarios = extract_horarios(json_data)
@@ -421,12 +419,16 @@ def export_ics():
             as_attachment=True,
             download_name="ThunderbirdAgenda.ics",
         )
-    except Exception as e:  # noqa: BLE001
-        return jsonify({"success": False, "error": f"Erro interno: {e}"}), 500
+    except (json.JSONDecodeError, ValueError, KeyError, TypeError) as e:
+        logger.error(f"Erro ao exportar ICS: {e}")
+        return jsonify({"success": False, "error": f"Erro ao processar dados: {e}"}), 400
+    except Exception as e:
+        logger.critical(f"Erro inesperado ao exportar ICS: {e}", exc_info=True)
+        return jsonify({"success": False, "error": "Erro interno do servidor"}), 500
 
 
 if __name__ == "__main__":
     print("🚀 Iniciando servidor da API...")
-    print("📡 API disponível em: http://localhost:5000")
+    print(f"📡 API disponível em: http://localhost:{config['PORT']}")
     print("🌐 Frontend React deve estar em: http://localhost:5173")
-    app.run(debug=True, port=5000)
+    app.run(debug=config["DEBUG"], port=config["PORT"])

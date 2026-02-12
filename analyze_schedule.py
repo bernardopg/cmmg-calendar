@@ -65,9 +65,9 @@ def analyze_schedule_data(input_file):
 
     # Relatório
     print("📊 ESTATÍSTICAS GERAIS:")
-    print("Total de registros: {total_entries}")
-    print("Registros válidos: {valid_entries}")
-    print("Registros inválidos: {total_entries - valid_entries}")
+    print(f"Total de registros: {total_entries}")
+    print(f"Registros válidos: {valid_entries}")
+    print(f"Registros inválidos: {total_entries - valid_entries}")
     print()
 
     print(f"📚 MATÉRIAS ({len(subjects)} diferentes):")
@@ -82,7 +82,7 @@ def analyze_schedule_data(input_file):
 
     print("📍 LOCAIS MAIS UTILIZADOS:")
     for location, count in locations.most_common(5):
-        print("{location}: {count} aulas")
+        print(f"   {location}: {count} aulas")
     print()
 
     print("📅 DISTRIBUIÇÃO POR DIA DA SEMANA:")

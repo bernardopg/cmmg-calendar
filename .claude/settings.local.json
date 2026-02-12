@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(grep:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run build:*)",
+      "Bash(bash:*)",
+      "Bash(/home/bitter/development/cmmg-calendar/venv/bin/python:*)",
+      "Bash(node -e:*)",
+      "Bash(node:*)",
+      "Bash(kill:*)"
+    ]
+  }
+}

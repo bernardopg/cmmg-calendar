@@ -6,7 +6,6 @@ export const useApiHealth = (checkInterval: number = 10000): UseApiHealthReturn 
 
   useEffect(() => {
     let active = true;
-    let intervalId: NodeJS.Timeout;
 
     const checkHealth = async () => {
       try {
@@ -16,7 +15,7 @@ export const useApiHealth = (checkInterval: number = 10000): UseApiHealthReturn 
         if (!active) return;
 
         setStatus(data?.status === 'up' ? 'up' : 'down');
-      } catch (error) {
+      } catch {
         if (!active) return;
         setStatus('down');
       }
@@ -26,13 +25,11 @@ export const useApiHealth = (checkInterval: number = 10000): UseApiHealthReturn 
     checkHealth();
 
     // Set up interval for periodic checks
-    intervalId = setInterval(checkHealth, checkInterval);
+    const intervalId = setInterval(checkHealth, checkInterval);
 
     return () => {
       active = false;
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
+      clearInterval(intervalId);
     };
   }, [checkInterval]);
 

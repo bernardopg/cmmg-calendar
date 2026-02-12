@@ -11,7 +11,7 @@ from __future__ import annotations
 import csv
 import io
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, Iterable, List
 
 ICS_HEADER = (
@@ -95,7 +95,7 @@ def _ics_datetime(date_iso: str, time_str: str) -> str:
 
 def generate_ics(horarios: Iterable[Dict[str, Any]]) -> str:
     """Gera conteúdo ICS completo (string)."""
-    now = datetime.utcnow().strftime("%Y%m%dT%H%M%SZ")
+    now = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     out = [ICS_HEADER]
     for entry in horarios:
         if not (
