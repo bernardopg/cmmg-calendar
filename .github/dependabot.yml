@@ -1,0 +1,57 @@
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: "/"
+    target-branch: main
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    rebase-strategy: auto
+    commit-message:
+      prefix: build(deps)
+    labels:
+      - dependencies
+      - python
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: "/react-app"
+    target-branch: main
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:10"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    rebase-strategy: auto
+    versioning-strategy: increase
+    commit-message:
+      prefix: build(deps)
+    labels:
+      - dependencies
+      - javascript
+    groups:
+      frontend-dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    target-branch: main
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:20"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 3
+    rebase-strategy: auto
+    commit-message:
+      prefix: ci(deps)
+    labels:
+      - dependencies
