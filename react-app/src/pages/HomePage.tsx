@@ -1,5 +1,5 @@
 import { Activity, AlertCircle, ChevronDown, Download, ExternalLink, KeyRound, LogIn, Eye, EyeOff } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import {
   useFileUpload,
@@ -32,15 +32,13 @@ export const HomePage = () => {
     [rawJson]
   );
 
-  useEffect(() => {
-    if (error) {
-      setIsUploadCollapsed(false);
-    }
-  }, [error]);
-
   const handleAnalyze = async () => {
     if (!file) return;
-    await analyzeSchedule(file);
+    const analysisSucceeded = await analyzeSchedule(file);
+
+    if (!analysisSucceeded) {
+      setIsUploadCollapsed(false);
+    }
   };
 
   const handleLoginAndExtract = async () => {
