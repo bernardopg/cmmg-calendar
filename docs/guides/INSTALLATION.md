@@ -5,8 +5,8 @@ Este guia cobre instalação e execução local do CMMG Calendar Analyzer.
 ## Requisitos
 
 - Python 3.10+
-- Node.js 18+
-- npm 9+
+- Node.js `^20.19.0` ou `>=22.12.0`
+- npm 10+
 - Git
 
 ## 1) Clone do projeto
@@ -26,6 +26,8 @@ O script:
 
 - cria `venv/` se necessário;
 - instala dependências Python se necessário;
+- valida a versão mínima do Node.js;
+- instala dependências do frontend se `react-app/node_modules` estiver ausente ou incompleto;
 - inicia API Flask em `:5000`;
 - inicia frontend Vite em `:5173`.
 
@@ -39,6 +41,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 python api_server.py
 ```
+
+Observação:
+
+- `api_server.py` é o entrypoint canônico do backend atual.
 
 ### Frontend
 
@@ -66,7 +72,7 @@ Frontend:
 
 - abra `http://localhost:5173`
 
-## 5) Execução CLI (sem frontend)
+## 5) Execução CLI
 
 ```bash
 source venv/bin/activate
@@ -82,7 +88,12 @@ FLASK_DEBUG=False
 SECRET_KEY=troque-esta-chave
 PORT=5000
 MAX_FILE_SIZE=10
-RATE_LIMIT_STORAGE=memory
+RATE_LIMIT_STORAGE=memory://
+TOTVS_COOKIE=
+TOTVS_QUADRO_URL=
+TOTVS_PORTAL_REFERER=
+TOTVS_LOGIN_URL=
+TOTVS_DEFAULT_ALIAS=CorporeRM
 ```
 
 ## Problemas comuns
@@ -95,16 +106,20 @@ RATE_LIMIT_STORAGE=memory
 
 - instale Node.js + npm e valide com `node -v` e `npm -v`.
 
+### Versão do Node incompatível
+
+- use Node.js `20.19+` ou `22.12+`.
+
 ### Porta 5000 ou 5173 já em uso
 
 - finalize processos existentes ou ajuste portas manualmente.
 
 ### Erro ao instalar dependências Python
 
-- ative o ambiente virtual (`source venv/bin/activate`) antes de rodar `pip install -r requirements.txt`.
+- ative o ambiente virtual antes de rodar `pip install -r requirements.txt`.
 
 ## Próximos passos
 
-- uso da UI: [WEB_INTERFACE.md](WEB_INTERFACE.md)
-- API completa: [API_REFERENCE.md](API_REFERENCE.md)
-- importação em calendário: [GOOGLE_CALENDAR.md](GOOGLE_CALENDAR.md) e [THUNDERBIRD.md](THUNDERBIRD.md)
+- UI: [WEB_INTERFACE.md](WEB_INTERFACE.md)
+- API: [API_REFERENCE.md](API_REFERENCE.md)
+- importação: [GOOGLE_CALENDAR.md](GOOGLE_CALENDAR.md) e [THUNDERBIRD.md](THUNDERBIRD.md)

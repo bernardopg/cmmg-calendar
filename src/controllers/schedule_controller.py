@@ -11,7 +11,7 @@ from typing import Any, Dict, Optional, Union
 from flask import Flask, Response, jsonify, request, send_file
 
 from ..config.app import config
-from ..models.exceptions import FileValidationError
+from ..models.exceptions import FileValidationError, ProcessingError
 from ..models.schedule import APIResponse
 from ..services.schedule_service import ScheduleService
 
@@ -100,10 +100,10 @@ class ScheduleController:
             result = self.service.analyze_schedule_data(json_data)
 
             if result.success:
-                response_data = result.data.get("data", {}) if result.data else {}
+                response_data = result.data or {}
                 self.logger.info(f"Análise concluída para {client_ip}")
                 return (
-                    jsonify(APIResponse(success=True, data=response_data).dict()),
+                    jsonify(APIResponse(success=True, data=response_data).model_dump()),
                     200,
                 )
             else:
@@ -148,6 +148,9 @@ class ScheduleController:
                 },
             )
 
+        except ProcessingError as pe:
+            return self._create_error_response(str(pe), pe.status_code)
+
         except Exception as e:
             error_message = f"Erro durante exportação CSV: {str(e)}"
             self.logger.error(error_message, exc_info=True)
@@ -184,6 +187,9 @@ class ScheduleController:
                 download_name="ThunderbirdAgenda.ics",
             )
 
+        except ProcessingError as pe:
+            return self._create_error_response(str(pe), pe.status_code)
+
         except Exception as e:
             error_message = f"Erro durante exportação ICS: {str(e)}"
             self.logger.error(error_message, exc_info=True)
@@ -219,7 +225,5 @@ class ScheduleController:
         self, message: str, status_code: int
     ) -> tuple[Response, int]:
         """Create standardized error response."""
-        from ..models.schedule import APIResponse
-
         response = APIResponse(success=False, error=message)
-        return (jsonify(response.dict()), status_code)
+        return (jsonify(response.model_dump()), status_code)

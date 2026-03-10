@@ -11,10 +11,10 @@ export const StatisticsCard = ({ title, icon, data, type = 'list' }: StatisticsC
         ['Válidos', data.valid_entries],
         ['Inválidos', data.invalid_entries],
       ]
-    : Object.entries(data);
+    : Object.entries(data).sort(([, left], [, right]) => right - left);
 
   return (
-    <article className="stats-card card-hover fade-up">
+    <article className={`stats-card stats-card--${type} card-hover fade-up`}>
       <div className="stats-card__header">
         <span className="stats-card__icon" aria-hidden="true">
           {icon}
@@ -24,9 +24,11 @@ export const StatisticsCard = ({ title, icon, data, type = 'list' }: StatisticsC
 
       <div className="stats-card__body">
         {entries.slice(0, type === 'stats' ? 3 : 5).map(([label, value]) => (
-          <div key={label} className="stats-line">
-            <span>{label}</span>
-            <strong>{value}</strong>
+          <div key={String(label)} className={`stats-line stats-line--${type}`}>
+            <span className="stats-line__label" title={String(label)}>
+              {label}
+            </span>
+            <strong className="stats-line__value">{value}</strong>
           </div>
         ))}
       </div>

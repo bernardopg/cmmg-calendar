@@ -12,14 +12,45 @@ cd "$BASE_DIR"
 # Instalar dependências Python se necessário
 echo "📦 Verificando dependências Python..."
 
+REQUIRED_NODE_VERSION_DISPLAY="20.19+ ou 22.12+"
+
 # Criar ambiente virtual se não existir
 if [ ! -d "venv" ]; then
     echo "🏗️  Criando ambiente virtual Python..."
     python3 -m venv venv
 fi
 
+echo "🟢 Verificando ambiente Node.js..."
+
+if ! command -v node >/dev/null 2>&1; then
+    echo "❌ Erro: Node.js não encontrado. Instale Node.js ${REQUIRED_NODE_VERSION_DISPLAY}."
+    exit 1
+fi
+
+if ! command -v npm >/dev/null 2>&1; then
+    echo "❌ Erro: npm não encontrado. Instale npm compatível com Node.js ${REQUIRED_NODE_VERSION_DISPLAY}."
+    exit 1
+fi
+
+NODE_VERSION="$(node -p "process.versions.node")"
+echo "🔢 Node.js detectado: $NODE_VERSION"
+
+if ! node <<'NODE'
+const [major, minor] = process.versions.node.split('.').map(Number);
+const supported =
+  major >= 23 ||
+  (major === 22 && minor >= 12) ||
+  (major === 20 && minor >= 19);
+
+process.exit(supported ? 0 : 1);
+NODE
+then
+    echo "❌ Erro: versão do Node.js incompatível. Use Node.js ${REQUIRED_NODE_VERSION_DISPLAY}."
+    exit 1
+fi
+
 # Ativar ambiente virtual e instalar dependências
-if ! ./venv/bin/python -c "import flask" 2>/dev/null; then
+if ! ./venv/bin/python -c "import flask, requests" 2>/dev/null; then
     echo "⬇️  Instalando dependências Python..."
     ./venv/bin/pip install -r requirements.txt
 else
@@ -68,6 +99,14 @@ fi
 # Iniciar servidor React
 echo "⚛️  Iniciando servidor React..."
 cd react-app
+
+if [ ! -d "node_modules" ] || [ ! -x "node_modules/.bin/vite" ]; then
+    echo "⬇️  Instalando dependências do frontend..."
+    npm install
+else
+    echo "✅ Dependências do frontend já instaladas"
+fi
+
 npm run dev &
 REACT_PID=$!
 echo "🌐 React iniciado com PID: $REACT_PID"
@@ -90,8 +129,8 @@ echo ""
 echo "⏹️  Para parar os servidores:"
 echo "   kill $API_PID $REACT_PID"
 echo ""
-echo "💡 Os servidores estão rodando em background."
-echo "   Você pode fechar este terminal e os servidores continuarão funcionando."
+echo "💡 Mantenha este terminal aberto enquanto estiver usando o modo monitorado."
+echo "   Para deixar em background de forma persistente, use seu gerenciador de processos preferido."
 
 # Manter o script ativo para mostrar logs se necessário
 echo "📊 Monitorando aplicação... (Pressione Ctrl+C para parar tudo)"

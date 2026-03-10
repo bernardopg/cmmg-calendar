@@ -26,6 +26,10 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+def _parse_origins(origins: str) -> list[str]:
+    return [origin.strip() for origin in origins.split(",") if origin.strip()]
+
+
 def create_app() -> Flask:
     """
     Factory function to create and configure the Flask application.
@@ -40,12 +44,13 @@ def create_app() -> Flask:
     app.config.from_mapping(config.to_dict())
 
     # Initialize CORS
-    CORS(app, origins=config.CORS_ORIGINS)
+    CORS(app, origins=_parse_origins(config.CORS_ORIGINS))
 
     # Initialize Limiter
     limiter = Limiter(
         app=app,
         key_func=get_remote_address,
+        storage_uri=config.RATE_LIMIT_STORAGE,
     )
 
     # Initialize service layer
@@ -80,5 +85,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
     main()

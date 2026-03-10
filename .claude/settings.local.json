@@ -11,5 +11,7 @@
       "Bash(node:*)",
       "Bash(kill:*)"
     ]
-  }
+  },
+  "prefersReducedMotion": true,
+  "outputStyle": "default"
 }

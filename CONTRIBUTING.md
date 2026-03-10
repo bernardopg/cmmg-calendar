@@ -5,43 +5,47 @@ Obrigado por considerar contribuir com o CMMG Calendar Analyzer.
 ## Como contribuir
 
 1. Faça um fork do projeto.
-2. Crie uma branch descritiva:
+2. Crie uma branch descritiva.
+3. Implemente mudanças pequenas e focadas.
+4. Atualize a documentação quando necessário.
+5. Abra um Pull Request com descrição clara.
+
+Exemplo:
 
 ```bash
 git checkout -b feat/minha-melhoria
 ```
 
-1. Implemente mudanças pequenas e focadas.
-2. Atualize documentação quando necessário.
-3. Abra Pull Request com descrição clara.
-
 ## Padrões esperados
 
-- preserve estilo de código existente;
-- não inclua mudanças não relacionadas ao escopo;
-- prefira correções de causa-raiz;
-- mantenha mensagens de commit objetivas.
+- preserve o estilo de código existente
+- não inclua mudanças fora do escopo
+- prefira correções de causa-raiz
+- mantenha mensagens de commit objetivas
 
-## Backend (Python)
+## Backend
 
-- instalar dependências via `requirements.txt`;
-- validar execução da API (`python api_server.py`);
-- quando aplicável, testar endpoint com `test_export_endpoints.py`.
+- instale dependências via `requirements.txt`
+- valide a API com `python api_server.py`
+- rode `./venv/bin/python test_export_endpoints.py` quando alterar contratos ou exportação
 
-## Frontend (React)
+## Frontend
+
+Use `npm` como fluxo oficial do repositório.
 
 ```bash
 cd react-app
+npm install
 npm run lint
 npm run build
 ```
 
-## Pull Request checklist
+## Checklist de Pull Request
 
 - [ ] O problema foi descrito claramente
 - [ ] A solução está focada no escopo
 - [ ] A documentação foi atualizada
-- [ ] Não foram introduzidos arquivos/links quebrados
+- [ ] Não foram introduzidos arquivos ou links quebrados
 
 ## Código de conduta
 
@@ -49,4 +53,4 @@ Ao contribuir, siga [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Dúvidas
 
-Abra uma issue ou entre em contato pelos canais em [CREDITS.md](CREDITS.md).
+Abra uma issue ou consulte os canais em [CREDITS.md](CREDITS.md).

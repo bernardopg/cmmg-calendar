@@ -106,6 +106,8 @@ export interface UseScheduleAnalysisReturn {
   result: AnalysisResult | null;
   error: string | null;
   analyzeSchedule: (file: File) => Promise<void>;
+  extractAndAnalyze: (totvsCookie?: string) => Promise<ScheduleData | null>;
+  loginAndExtract: (user: string, password: string) => Promise<ScheduleData | null>;
   clearResults: () => void;
 }
 

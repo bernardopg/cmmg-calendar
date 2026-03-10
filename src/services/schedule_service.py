@@ -6,11 +6,20 @@ Orchestrates schedule analysis and export operations.
 import logging
 from typing import Any, Dict
 
+from exports import generate_csv, generate_ics
+
 from ..models.exceptions import APIValidationError, FileValidationError, ProcessingError
+from ..models.schedule import HorarioEntry
 from ..models.schedule import APIResponse
 from ..repositories.schedule_repository import ScheduleRepository
 
 logger = logging.getLogger(__name__)
+
+
+def _entry_to_export_dict(entry: HorarioEntry) -> Dict[str, Any]:
+    """Preserve the original schema expected by shared export helpers."""
+
+    return entry.model_dump(exclude_none=True)
 
 
 class ScheduleService:
@@ -59,7 +68,7 @@ class ScheduleService:
             )
 
             self.logger.info("Análise de horário concluída com sucesso")
-            return APIResponse(success=True, data=analysis_result.dict())
+            return APIResponse(success=True, data=analysis_result.model_dump())
 
         except APIValidationError as ave:
             self.logger.warning(f"Erro de validação: {str(ave)}")
@@ -99,7 +108,7 @@ class ScheduleService:
 
         if file_size > max_size:
             raise FileValidationError(
-                f"Arquivo muito grande. Tamanho máximo permitido: 10MB"
+                "Arquivo muito grande. Tamanho máximo permitido: 10MB"
             )
 
     def process_csv_export(self, json_data: Dict[str, Any]) -> str:
@@ -126,41 +135,16 @@ class ScheduleService:
                     "Nenhuma entrada válida encontrada para exportação"
                 )
 
-            # Generate CSV using existing export function
-            # Import here to avoid circular imports
-            import os
-            import sys
-
-            parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            sys.path.append(parent_dir)
-
-            from exports import generate_csv
-
-            # Convert entries to format expected by generate_csv
-            horarios = []
-            for entry in validated_entries:
-                horario_dict = {}
-                if hasattr(entry, "NOME") and entry.NOME:
-                    horario_dict["nome"] = entry.NOME
-                if hasattr(entry, "PREDIO") and entry.PREDIO:
-                    horario_dict["predio"] = entry.PREDIO
-                if hasattr(entry, "HORAINICIAL") and entry.HORAINICIAL:
-                    horario_dict["hora_inicial"] = entry.HORAINICIAL
-                if hasattr(entry, "HORAFINAL") and entry.HORAFINAL:
-                    horario_dict["hora_final"] = entry.HORAFINAL
-                if hasattr(entry, "DATAINICIAL") and entry.DATAINICIAL:
-                    horario_dict["data_inicial"] = entry.DATAINICIAL
-                if hasattr(entry, "DIASEMANA") and entry.DIASEMANA:
-                    horario_dict["dia_semana"] = entry.DIASEMANA
-
-                if horario_dict:
-                    horarios.append(horario_dict)
+            horarios = [_entry_to_export_dict(entry) for entry in validated_entries]
 
             # Generate CSV content
             csv_content = generate_csv(horarios)
 
             self.logger.info("Exportação CSV concluída com sucesso")
             return csv_content
+
+        except ProcessingError:
+            raise
 
         except Exception as e:
             error_message = f"Falha na geração do arquivo CSV: {str(e)}"
@@ -191,43 +175,16 @@ class ScheduleService:
                     "Nenhuma entrada válida encontrada para exportação"
                 )
 
-            # Generate ICS using existing export function
-            # Import here to avoid circular imports
-            import os
-            import sys
-
-            parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-            sys.path.append(parent_dir)
-
-            from exports import generate_ics
-
-            # Convert entries to format expected by generate_ics
-            horarios = []
-            for entry in validated_entries:
-                horario_dict = {}
-                if hasattr(entry, "NOME") and entry.NOME:
-                    horario_dict["nome"] = entry.NOME
-                if hasattr(entry, "PREDIO") and entry.PREDIO:
-                    horario_dict["predio"] = entry.PREDIO
-                if hasattr(entry, "HORAINICIAL") and entry.HORAINICIAL:
-                    horario_dict["hora_inicial"] = entry.HORAINICIAL
-                if hasattr(entry, "HORAFINAL") and entry.HORAFINAL:
-                    horario_dict["hora_final"] = entry.HORAFINAL
-                if hasattr(entry, "DATAINICIAL") and entry.DATAINICIAL:
-                    horario_dict["data_inicial"] = entry.DATAINICIAL
-                if hasattr(entry, "DIASEMANA") and entry.DIASEMANA:
-                    horario_dict["dia_semana"] = entry.DIASEMANA
-
-                if horario_dict:
-                    horarios.append(horario_dict)
+            horarios = [_entry_to_export_dict(entry) for entry in validated_entries]
 
             # Generate ICS content
             ics_content = generate_ics(horarios)
 
             self.logger.info("Exportação ICS concluída com sucesso")
-            return ics_content.encode(
-                "utf-8"
-            )  # Encode string to bytes to match return type
+            return ics_content.encode("utf-8")
+
+        except ProcessingError:
+            raise
 
         except Exception as e:
             error_message = f"Falha na geração do arquivo ICS: {str(e)}"

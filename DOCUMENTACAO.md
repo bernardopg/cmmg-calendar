@@ -1,56 +1,38 @@
 # Documentação Completa
 
-Guia oficial de uso, instalação e integração do projeto CMMG Calendar Analyzer.
-
-## Sumário
-
-1. [Visão geral](#visão-geral)
-2. [Requisitos](#requisitos)
-3. [Instalação](#instalação)
-4. [Uso pela interface web](#uso-pela-interface-web)
-5. [Uso via CLI](#uso-via-cli)
-6. [API REST](#api-rest)
-7. [Formato do JSON de entrada](#formato-do-json-de-entrada)
-8. [Formato dos arquivos de saída](#formato-dos-arquivos-de-saída)
-9. [Solução de problemas](#solução-de-problemas)
-10. [Créditos](#créditos)
+Guia oficial de uso, execução e integração do CMMG Calendar Analyzer.
 
 ## Visão geral
 
-O CMMG Calendar Analyzer recebe um JSON acadêmico (`QuadroHorarioAluno.json`) e permite:
+O projeto recebe um `QuadroHorarioAluno.json` e permite:
 
-- analisar a grade de horários;
-- exportar para CSV compatível com Google Calendar;
-- exportar para ICS compatível com Thunderbird e outros clientes iCalendar.
+- analisar a grade acadêmica
+- exportar CSV compatível com Google Calendar
+- exportar ICS compatível com Thunderbird e outros clientes iCalendar
 
 Formas de uso disponíveis:
 
-- Interface web (React + API Flask)
+- interface web
 - API REST
 - CLI local
+
+## Arquitetura atual
+
+- `api_server.py` é o backend canônico em produção local
+- `main.py` e `analyze_schedule.py` cobrem a operação por CLI
+- `exports.py` concentra a geração de CSV e ICS
+- `src/` contém a refatoração modular do backend, ainda em evolução
+- `react-app/` contém o frontend React + TypeScript
 
 ## Requisitos
 
 - Python 3.10+
-- Node.js 18+
-- npm 9+
-
-Dependências do backend:
-
-```bash
-pip install -r requirements.txt
-```
-
-Dependências do frontend:
-
-```bash
-cd react-app
-npm install
-```
+- Node.js `^20.19.0` ou `>=22.12.0`
+- npm 10+
 
 ## Instalação
 
-### Execução rápida (web)
+### Execução rápida
 
 ```bash
 git clone https://github.com/bernardopg/cmmg-calendar.git
@@ -58,14 +40,11 @@ cd cmmg-calendar
 ./start_app.sh
 ```
 
-Serviços disponíveis:
-
-- Frontend: <http://localhost:5173>
-- API: <http://localhost:5000>
+O script instala dependências ausentes, valida Node.js e sobe backend mais frontend.
 
 ### Execução manual
 
-Terminal 1 (API):
+Backend:
 
 ```bash
 python3 -m venv venv
@@ -74,7 +53,7 @@ pip install -r requirements.txt
 python api_server.py
 ```
 
-Terminal 2 (frontend):
+Frontend:
 
 ```bash
 cd react-app
@@ -84,19 +63,27 @@ npm run dev
 
 ## Uso pela interface web
 
-1. Abra `http://localhost:5173`
-2. Faça upload do arquivo JSON
-3. Clique em **Analisar Horário**
-4. Revise estatísticas e distribuições
-5. Exporte em CSV ou ICS
+Há três fluxos disponíveis na página principal:
+
+### Login TOTVS
+
+Informe usuário e senha do Portal do Aluno. O backend chama `/totvs-login`, autentica no TOTVS, busca o horário e devolve a análise.
+
+### Cookie manual
+
+Cole um cookie de sessão autenticada. O backend chama `/extract-analyze`.
+
+### Upload manual
+
+Envie o `QuadroHorarioAluno.json` diretamente. O backend chama `/analyze`.
 
 ## Uso via CLI
 
-### Conversão para CSV + ICS
+### Gerar CSV e ICS
 
 Pré-requisito:
 
-- arquivo de entrada em `data/QuadroHorarioAluno.json`
+- arquivo em `data/QuadroHorarioAluno.json`
 
 Comando:
 
@@ -109,70 +96,36 @@ Saída:
 - `output/GoogleAgenda.csv`
 - `output/ThunderbirdAgenda.ics`
 
-### Análise estatística em terminal
+### Analisar no terminal
 
 ```bash
 python analyze_schedule.py
 ```
 
+### Baixar JSON via cookie
+
+Há também o utilitário:
+
+```bash
+python scripts/fetch_quadro_horario.py --cookie 'ASP.NET_SessionId=...; .ASPXAUTH=...'
+```
+
+Ele salva o arquivo por padrão em `data/QuadroHorarioAluno.json`.
+
 ## API REST
 
 Base URL padrão: `http://localhost:5000`
 
-### `GET /health`
+### Endpoints disponíveis
 
-Retorna status da API.
+- `GET /health`
+- `POST /analyze`
+- `POST /extract-analyze`
+- `POST /totvs-login`
+- `POST /export/csv`
+- `POST /export/ics`
 
-Resposta esperada:
-
-```json
-{
-  "status": "up",
-  "message": "API funcionando"
-}
-```
-
-### `POST /analyze`
-
-Recebe `multipart/form-data` com campo `file` (JSON) e retorna estatísticas.
-
-Exemplo:
-
-```bash
-curl -X POST -F "file=@data/QuadroHorarioAluno.json" http://localhost:5000/analyze
-```
-
-### `POST /export/csv`
-
-Aceita:
-
-- `multipart/form-data` com campo `file`, ou
-- JSON diretamente no corpo da requisição.
-
-Retorna arquivo CSV para download.
-
-Exemplo com arquivo:
-
-```bash
-curl -X POST -F "file=@data/QuadroHorarioAluno.json" \
-  http://localhost:5000/export/csv -o GoogleAgenda.csv
-```
-
-### `POST /export/ics`
-
-Aceita:
-
-- `multipart/form-data` com campo `file`, ou
-- JSON diretamente no corpo da requisição.
-
-Retorna arquivo ICS para download.
-
-Exemplo com arquivo:
-
-```bash
-curl -X POST -F "file=@data/QuadroHorarioAluno.json" \
-  http://localhost:5000/export/ics -o ThunderbirdAgenda.ics
-```
+Detalhes completos estão em [docs/guides/API_REFERENCE.md](docs/guides/API_REFERENCE.md).
 
 ## Formato do JSON de entrada
 
@@ -199,109 +152,64 @@ Estrutura esperada:
 }
 ```
 
-Campos mais relevantes para exportação:
+Campos mais relevantes:
 
 - `NOME`
 - `DATAINICIAL`
-- `DATAFINAL` (opcional; usa `DATAINICIAL` como fallback)
+- `DATAFINAL`
 - `HORAINICIAL`
 - `HORAFINAL`
 - `PREDIO`, `BLOCO`, `SALA`
 - `CODTURMA`, `CODSUBTURMA`, `NOMEREDUZIDO`, `URLAULAONLINE`
 
-## Formato dos arquivos de saída
+## Arquivos de saída
 
-### CSV (`GoogleAgenda.csv`)
+### CSV
 
-Colunas:
-
-- Subject
-- Start Date
-- Start Time
-- End Date
-- End Time
-- All Day Event
-- Description
-- Location
-- Private
-
-Observações:
-
+- nome padrão: `GoogleAgenda.csv`
 - datas em formato `MM/DD/YYYY`
 - compatível com importação do Google Calendar
 
-### ICS (`ThunderbirdAgenda.ics`)
+### ICS
 
-Formato iCalendar (`VCALENDAR` + `VEVENT`) com:
-
-- `UID` único por evento
-- `DTSTAMP` em UTC
-- `DTSTART` e `DTEND`
-- `SUMMARY`, `DESCRIPTION`, `LOCATION`
+- nome padrão: `ThunderbirdAgenda.ics`
+- formato `VCALENDAR` + `VEVENT`
+- inclui `UID`, `DTSTAMP`, `DTSTART`, `DTEND`, `SUMMARY`, `DESCRIPTION` e `LOCATION`
 
 ## Solução de problemas
 
-### Arquivo não encontrado na CLI
-
-Erro comum:
-
-- `data/QuadroHorarioAluno.json` inexistente.
-
-Solução:
-
-- crie a pasta `data/` e coloque o arquivo com esse nome;
-- ou adapte o caminho em `main.py`.
-
-### API retornando erro 400
-
-Causas comuns:
-
-- campo `file` ausente no multipart;
-- arquivo não é `.json`;
-- JSON malformado;
-- estrutura sem `data.SHorarioAluno`.
-
-### Frontend sem conexão com API
+### Arquivo inválido na análise
 
 Verifique:
 
-- API rodando na porta 5000;
-- frontend rodando na porta 5173;
-- proxy configurado em `react-app/vite.config.js`.
+- se o arquivo é JSON válido
+- se `data` contém a chave `SHorarioAluno`
+- se os registros possuem ao menos `NOME` e `DATAINICIAL`
+
+### Frontend sem conexão com a API
+
+Verifique:
+
+- backend rodando em `:5000`
+- frontend rodando em `:5173`
+- proxy configurado em `react-app/vite.config.js`
+
+### Falha no TOTVS
+
+Verifique:
+
+- credenciais válidas
+- cookie não expirado
+- disponibilidade do portal
+
+## Documentação relacionada
+
+- [README.md](README.md)
+- [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)
+- [docs/guides/INSTALLATION.md](docs/guides/INSTALLATION.md)
+- [docs/guides/WEB_INTERFACE.md](docs/guides/WEB_INTERFACE.md)
+- [docs/guides/API_REFERENCE.md](docs/guides/API_REFERENCE.md)
 
 ## Créditos
 
-Projeto desenvolvido e mantido por:
-
-- Bernardo Gomes
-- E-mail: <bernardo.gomes@bebitterbebetter.com.br>
-- Site: bebitterbebetter.com.br
-- Instagram/X: @be.pgomes
-- GitHub: [bernardopg](https://github.com/bernardopg)
-
-Thunderbird
-
-- “Arquivo não reconhecido”/“Erro ao importar”: garantir `.ics`, reiniciar e tentar de novo
-- Eventos ausentes: verifique filtros de visualização; o `.ics` contém apenas eventos válidos
-
-Espaço/ambiente
-
-- Verifique espaço em disco e dependências instaladas (`requirements.txt`)
-
----
-
-## Atualizações Futuras
-
-Ao receber um novo JSON:
-
-1. Substitua `data/QuadroHorarioAluno.json`
-2. Rode `python main.py` para novos CSV/ICS
-3. Reimporte no Google/Thunderbird
-
-Na interface web:
-
-- Refaça o upload do novo JSON e analise novamente
-
----
-
-Boas aulas e boa organização!
+Projeto desenvolvido e mantido por Bernardo Gomes.

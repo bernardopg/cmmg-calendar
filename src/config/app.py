@@ -23,6 +23,7 @@ class Config:
     RATE_LIMIT_DEFAULT: str = '10 per minute'
     RATE_LIMIT_ANALYZE: str = '10 per minute'
     RATE_LIMIT_EXPORT: str = '5 per minute'
+    RATE_LIMIT_STORAGE: str = 'memory://'
 
     # CORS
     CORS_ORIGINS: str = 'http://localhost:5173,http://127.0.0.1:5173'
@@ -46,6 +47,9 @@ class Config:
         self.RATE_LIMIT_DEFAULT = os.getenv('RATE_LIMIT_DEFAULT', '10 per minute')
         self.RATE_LIMIT_ANALYZE = os.getenv('RATE_LIMIT_ANALYZE', '10 per minute')
         self.RATE_LIMIT_EXPORT = os.getenv('RATE_LIMIT_EXPORT', '5 per minute')
+        self.RATE_LIMIT_STORAGE = self._normalize_rate_limit_storage(
+            os.getenv('RATE_LIMIT_STORAGE', 'memory://')
+        )
 
         # CORS
         self.CORS_ORIGINS = os.getenv('CORS_ORIGINS', 'http://localhost:5173,http://127.0.0.1:5173')
@@ -69,6 +73,15 @@ class Config:
             'analyze': self.RATE_LIMIT_ANALYZE,
             'export': self.RATE_LIMIT_EXPORT,
         }
+
+    @staticmethod
+    def _normalize_rate_limit_storage(value: str) -> str:
+        """Accept legacy aliases while passing a valid storage URI to Flask-Limiter."""
+
+        normalized = value.strip()
+        if normalized == 'memory':
+            return 'memory://'
+        return normalized or 'memory://'
 
 
 # Singleton instance

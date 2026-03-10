@@ -1,6 +1,6 @@
 # Guia da Interface Web
 
-Este guia explica o fluxo de uso da aplicação web (`react-app`) integrada à API Flask.
+Este guia explica os fluxos de uso da aplicação web em `react-app/`, integrada ao backend Flask em `api_server.py`.
 
 ## Pré-requisitos
 
@@ -13,27 +13,43 @@ Início rápido:
 ./start_app.sh
 ```
 
+## Fluxos disponíveis
+
+### 1) Login no Portal do Aluno
+
+Use usuário e senha do TOTVS para que o backend faça login, consulte o `QuadroHorarioAluno` e devolva a análise pronta.
+
+### 2) Cookie manual
+
+Cole o header `Cookie` de uma sessão já autenticada no portal. Esse fluxo usa o endpoint `/extract-analyze`.
+
+### 3) Upload manual
+
+Envie o `QuadroHorarioAluno.json` diretamente pela interface. Esse fluxo usa o endpoint `/analyze`.
+
 ## Fluxo de uso
 
-1. Abra `http://localhost:5173`.
-2. Faça upload do arquivo JSON.
-3. Clique em **Analisar Horário**.
-4. Revise os painéis de estatísticas.
-5. Exporte para CSV ou ICS.
+1. Abra `http://localhost:5173`
+2. Escolha login, cookie manual ou upload
+3. Aguarde a análise
+4. Revise os painéis de estatísticas
+5. Exporte CSV ou ICS
 
 ## O que a interface mostra
 
-- status da API;
-- feedback de upload e análise;
-- métricas de total/validade de registros;
-- distribuição por disciplina, horário, local, dia e mês;
-- ações de exportação de calendário.
+- status da API
+- feedback de upload, autenticação e análise
+- métricas de total, validade e distribuição de registros
+- ações de exportação
 
 ## Mensagens de erro comuns
 
 ### Erro de conexão
 
-Causa provável: API não iniciada.
+Causa provável:
+
+- API não iniciada
+- proxy do Vite não apontando para a porta correta
 
 Ação:
 
@@ -45,11 +61,25 @@ python api_server.py
 
 Causa provável:
 
-- arquivo fora do formato esperado;
-- JSON inválido;
-- chave `data.SHorarioAluno` ausente.
+- arquivo fora do formato esperado
+- JSON inválido
+- chave `SHorarioAluno` ausente dentro de `data`
 
-Ação: valide o arquivo de entrada e tente novamente.
+Ação:
+
+- valide a estrutura do arquivo e tente novamente
+
+### Erro no login TOTVS
+
+Causa provável:
+
+- credenciais inválidas
+- portal indisponível
+- sessão expirada
+
+Ação:
+
+- tente novamente com credenciais válidas ou use o fluxo por cookie
 
 ## Ambiente de desenvolvimento
 

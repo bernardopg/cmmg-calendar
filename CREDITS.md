@@ -5,9 +5,9 @@
 **Bernardo Gomes**
 
 - E-mail: <bernardo.gomes@bebitterbebetter.com.br>
-- Site: bebitterbebetter.com.br
-- Instagram/X: @be.pgomes
-- GitHub: <https://github.com/bernardopg>
+- Site: bebitterbebetter.com.br[https://bebitterbebetter.com.br]
+- Instagram: @be.pgomes[https://www.instagram.com/be.pgomes]
+- GitHub: <https://github.com/bernardopg>[https://github.com/bernardopg]
 
 ## Projeto
 

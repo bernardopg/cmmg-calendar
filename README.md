@@ -1,41 +1,49 @@
 # CMMG Calendar Analyzer
 
-Converte o arquivo `QuadroHorarioAluno.json` em calendários utilizáveis (CSV para Google Calendar e ICS para Thunderbird/Outros) e oferece análise estatística via Web, API e CLI.
+Converte o arquivo `QuadroHorarioAluno.json` em calendários utilizáveis e oferece análise estatística por Web, API e CLI.
 
 ## Status
 
-- Backend Flask funcional (`api_server.py`)
-- Frontend React + TypeScript funcional (`react-app/`)
-- Exportação CSV e ICS funcional (`exports.py`)
-- CLI funcional para geração local (`main.py`)
+- Backend Flask ativo em `api_server.py`
+- Frontend React + TypeScript em `react-app/`
+- CLI local para gerar CSV e ICS em `main.py`
+- Refatoração modular do backend em `src/` ainda em evolução
 
 ## Principais Recursos
 
-- Conversão de horários acadêmicos para:
-  - `GoogleAgenda.csv` (Google Calendar)
-  - `ThunderbirdAgenda.ics` (Thunderbird, Outlook, Apple Calendar e clientes compatíveis com iCalendar)
-- Análise de dados de horário:
-  - total de registros válidos/inválidos
-  - distribuição por disciplinas, horários, locais, dias e meses
-- Interface web com upload de arquivo e exportação
-- API REST para integração com outros sistemas
+- Geração de `GoogleAgenda.csv` para importação no Google Calendar
+- Geração de `ThunderbirdAgenda.ics` para Thunderbird, Outlook, Apple Calendar e clientes iCalendar
+- Análise de registros válidos, inválidos, disciplinas, horários, locais, dias e meses
+- Interface web com três fluxos:
+  - upload manual do JSON
+  - extração automática via login no Portal do Aluno TOTVS
+  - extração manual via cookie de sessão TOTVS
+- API REST para integração
 
 ## Requisitos
 
 - Python 3.10+
-- Node.js 18+
-- npm 9+
-- Sistema Linux, macOS ou Windows
+- Node.js `^20.19.0` ou `>=22.12.0`
+- npm 10+
+- Linux, macOS ou Windows
 
 ## Início Rápido
 
-### Opção 1: Web (recomendada)
+### Opção 1: Web
 
 ```bash
 git clone https://github.com/bernardopg/cmmg-calendar.git
 cd cmmg-calendar
 ./start_app.sh
 ```
+
+O script:
+
+- cria `venv/` se necessário;
+- instala dependências Python se necessário;
+- valida a versão do Node.js;
+- instala dependências do frontend se necessário;
+- inicia API em `:5000` e frontend em `:5173`.
 
 Abra:
 
@@ -51,29 +59,36 @@ pip install -r requirements.txt
 python main.py
 ```
 
-Arquivos gerados:
+Saída:
 
 - `output/GoogleAgenda.csv`
 - `output/ThunderbirdAgenda.ics`
 
-## Uso por Interface
+## Uso pela Interface
 
 1. Abra `http://localhost:5173`
-2. Envie o arquivo JSON do horário
-3. Clique em **Analisar Horário**
-4. Exporte CSV ou ICS pelo painel de resultados
+2. Escolha um fluxo:
+   - fazer login no Portal do Aluno;
+   - colar um cookie TOTVS manualmente;
+   - enviar o arquivo JSON manualmente.
+3. Revise as estatísticas
+4. Exporte CSV ou ICS
 
-## API (resumo)
+## API
 
 - `GET /health`
-- `POST /analyze` (multipart com `file`)
-- `POST /export/csv` (multipart com `file` ou JSON no body)
-- `POST /export/ics` (multipart com `file` ou JSON no body)
+- `POST /analyze`
+- `POST /extract-analyze`
+- `POST /totvs-login`
+- `POST /export/csv`
+- `POST /export/ics`
 
 Exemplo:
 
 ```bash
-curl -X POST -F "file=@data/QuadroHorarioAluno.json" http://localhost:5000/analyze
+curl -X POST \
+  -F "file=@data/QuadroHorarioAluno.json" \
+  http://localhost:5000/analyze
 ```
 
 ## Estrutura do Projeto
@@ -85,10 +100,16 @@ cmmg-calendar/
 ├── analyze_schedule.py
 ├── exports.py
 ├── start_app.sh
-├── src/                 # arquitetura modular em evolução
+├── scripts/
+├── src/
 ├── react-app/
 └── docs/
 ```
+
+Observação:
+
+- `api_server.py` é o ponto de entrada canônico do backend atual.
+- `src/` concentra a refatoração modular e já possui smoke test em `test_export_endpoints.py`.
 
 ## Documentação
 

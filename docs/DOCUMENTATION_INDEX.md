@@ -2,21 +2,25 @@
 
 Navegação centralizada da documentação do projeto.
 
-## Documentação principal
+## Guias principais
 
 - [README](../README.md) — visão geral e início rápido
-- [DOCUMENTACAO](../DOCUMENTACAO.md) — guia completo de uso
-- [CLAUDE](../CLAUDE.md) — contexto técnico para assistentes/agentes
+- [DOCUMENTACAO](../DOCUMENTACAO.md) — guia completo de uso, execução e solução de problemas
+- [Instalação](guides/INSTALLATION.md) — setup local e variáveis de ambiente
+- [Interface Web](guides/WEB_INTERFACE.md) — fluxos de uso da UI
+- [Referência da API](guides/API_REFERENCE.md) — contratos dos endpoints
 
-## Guias práticos
+## Guias de importação
 
-- [Instalação](guides/INSTALLATION.md)
-- [Interface Web](guides/WEB_INTERFACE.md)
-- [Referência da API](guides/API_REFERENCE.md)
 - [Google Calendar](guides/GOOGLE_CALENDAR.md)
 - [Thunderbird](guides/THUNDERBIRD.md)
 
-## Governança open-source
+## Material de apoio
+
+- [README_VISUAL](README_VISUAL.md) — organização de capturas e material visual
+- [`scripts/fetch_quadro_horario.py`](../scripts/fetch_quadro_horario.py) — utilitário para baixar o JSON via cookie autenticado
+
+## Governança
 
 - [Contribuição](../CONTRIBUTING.md)
 - [Código de Conduta](../CODE_OF_CONDUCT.md)
@@ -24,22 +28,13 @@ Navegação centralizada da documentação do projeto.
 - [Licença](../LICENSE)
 - [Créditos](../CREDITS.md)
 
-## Fluxo recomendado para novos usuários
+## Contexto para agentes
+
+- [CLAUDE](../CLAUDE.md) — contexto operacional para assistentes/agentes; não substitui a documentação principal para humanos
+
+## Fluxo recomendado
 
 1. Leia o [README](../README.md)
 2. Siga o [Guia de Instalação](guides/INSTALLATION.md)
-3. Use o [Guia da Interface Web](guides/WEB_INTERFACE.md)
-4. Escolha seu guia de importação:
- - [Google Calendar](guides/GOOGLE_CALENDAR.md)
- - [Thunderbird](guides/THUNDERBIRD.md)
-
-## Fluxo recomendado para desenvolvedores
-
-1. Leia [README](../README.md) + [DOCUMENTACAO](../DOCUMENTACAO.md)
-2. Valide endpoints em [Referência da API](guides/API_REFERENCE.md)
-3. Siga [Contribuição](../CONTRIBUTING.md)
-4. Respeite [Código de Conduta](../CODE_OF_CONDUCT.md)
-
-## Status
-
-Este índice foi revisado para conter somente links válidos no estado atual do repositório.
+3. Use o [Guia da Interface Web](guides/WEB_INTERFACE.md) ou a [Referência da API](guides/API_REFERENCE.md)
+4. Consulte o guia de importação apropriado

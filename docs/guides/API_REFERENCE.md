@@ -4,7 +4,7 @@ Base URL padrão: `http://localhost:5000`
 
 ## Autenticação
 
-Atualmente os endpoints são públicos em ambiente local.
+Os endpoints locais não exigem autenticação própria da aplicação. Os fluxos TOTVS dependem de credenciais do portal ou de um cookie de sessão válido.
 
 ## Endpoints
 
@@ -25,9 +25,8 @@ Resposta `200`:
 
 ### `POST /analyze`
 
-Analisa o arquivo de horário acadêmico.
+Analisa um arquivo de horário acadêmico enviado em `multipart/form-data`.
 
-- Método: `multipart/form-data`
 - Campo obrigatório: `file` (`.json`)
 - Limite de taxa: `10 por minuto`
 
@@ -39,7 +38,7 @@ curl -X POST \
   http://localhost:5000/analyze
 ```
 
-Resposta `200` (resumo):
+Resposta `200`:
 
 ```json
 {
@@ -61,9 +60,81 @@ Resposta `200` (resumo):
 
 Erros comuns:
 
-- `400`: arquivo ausente, tipo inválido ou JSON inválido
-- `413`: arquivo acima do tamanho máximo configurado
+- `400`: arquivo ausente, extensão inválida ou JSON inválido
+- `413`: arquivo acima do tamanho máximo
+- `429`: limite de taxa excedido
 - `500`: erro interno
+
+---
+
+### `POST /extract-analyze`
+
+Busca o `QuadroHorarioAluno` no TOTVS usando um cookie de sessão já autenticado e devolve os dados brutos mais a análise consolidada.
+
+- Body JSON opcional: `{"totvs_cookie":"ASP.NET_SessionId=...; .ASPXAUTH=..."}`
+- Se `totvs_cookie` não for enviado, a API tenta `TOTVS_COOKIE` no ambiente
+- Limite de taxa: `5 por minuto`
+
+Exemplo:
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"totvs_cookie":"ASP.NET_SessionId=...; .ASPXAUTH=..."}' \
+  http://localhost:5000/extract-analyze
+```
+
+Resposta `200`:
+
+```json
+{
+  "success": true,
+  "data": {
+    "analysis": {
+      "statistics": {
+        "total_entries": 677,
+        "valid_entries": 670,
+        "invalid_entries": 7
+      }
+    },
+    "schedule_data": {
+      "data": {
+        "SHorarioAluno": []
+      }
+    }
+  }
+}
+```
+
+Erros comuns:
+
+- `400`: cookie ausente
+- `401`: sessão TOTVS inválida ou expirada
+- `502`: falha de conexão ou resposta inválida do TOTVS
+
+---
+
+### `POST /totvs-login`
+
+Recebe credenciais do Portal do Aluno, faz login no TOTVS, busca o horário e devolve análise mais dados brutos.
+
+- Body JSON obrigatório: `{"user":"...","password":"..."}`
+- Limite de taxa: `5 por minuto`
+
+Exemplo:
+
+```bash
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"user":"seu-usuario","password":"sua-senha"}' \
+  http://localhost:5000/totvs-login
+```
+
+Erros comuns:
+
+- `400`: usuário ou senha ausentes
+- `401`: credenciais inválidas
+- `502`: falha ao consultar TOTVS
 
 ---
 
@@ -73,8 +144,8 @@ Gera CSV para Google Calendar.
 
 Aceita:
 
-1. `multipart/form-data` com campo `file`, ou
-2. JSON no corpo (`application/json`).
+1. `multipart/form-data` com campo `file`
+2. JSON no corpo (`application/json`)
 
 - Limite de taxa: `5 por minuto`
 
@@ -110,12 +181,12 @@ Gera ICS para Thunderbird e clientes iCalendar.
 
 Aceita:
 
-1. `multipart/form-data` com campo `file`, ou
-2. JSON no corpo (`application/json`).
+1. `multipart/form-data` com campo `file`
+2. JSON no corpo (`application/json`)
 
 - Limite de taxa: `5 por minuto`
 
-Exemplo com arquivo:
+Exemplo:
 
 ```bash
 curl -X POST \
@@ -154,7 +225,7 @@ Resposta `200`:
 
 ## Boas práticas de integração
 
-- valide o JSON antes do envio;
-- trate códigos `400`, `413`, `429` e `500`;
-- implemente retentativa para falhas transitórias;
-- use timeout de rede no cliente.
+- valide o JSON antes do envio
+- trate `400`, `401`, `413`, `429`, `500` e `502`
+- use timeout de rede no cliente
+- não persista credenciais TOTVS desnecessariamente

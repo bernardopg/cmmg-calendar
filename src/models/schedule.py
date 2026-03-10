@@ -12,11 +12,18 @@ class HorarioEntry(BaseModel):
     """Model for individual schedule entry validation."""
 
     NOME: Optional[str] = Field(None, description="Subject/Activity name")
+    DATAFINAL: Optional[str] = Field(None, description="End date")
     PREDIO: Optional[str] = Field(None, description="Building name")
+    BLOCO: Optional[str] = Field(None, description="Building block")
+    SALA: Optional[str] = Field(None, description="Classroom")
     HORAINICIAL: Optional[str] = Field(None, description="Start time")
     HORAFINAL: Optional[str] = Field(None, description="End time")
     DATAINICIAL: Optional[str] = Field(None, description="Start date")
     DIASEMANA: Optional[str] = Field(None, description="Day of week (0-6)")
+    CODTURMA: Optional[str] = Field(None, description="Class code")
+    CODSUBTURMA: Optional[str] = Field(None, description="Subclass code")
+    NOMEREDUZIDO: Optional[str] = Field(None, description="Short subject code")
+    URLAULAONLINE: Optional[str] = Field(None, description="Online class URL")
 
     class Config:
         arbitrary_types_allowed = True
