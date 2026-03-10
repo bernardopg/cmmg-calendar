@@ -105,7 +105,7 @@ export interface UseScheduleAnalysisReturn {
   loading: boolean;
   result: AnalysisResult | null;
   error: string | null;
-  analyzeSchedule: (file: File) => Promise<void>;
+  analyzeSchedule: (file: File) => Promise<boolean>;
   extractAndAnalyze: (totvsCookie?: string) => Promise<ScheduleData | null>;
   loginAndExtract: (user: string, password: string) => Promise<ScheduleData | null>;
   clearResults: () => void;

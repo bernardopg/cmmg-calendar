@@ -14,7 +14,7 @@ export const useScheduleAnalysis = (): UseScheduleAnalysisReturn => {
   const analyzeSchedule = useCallback(async (file: File) => {
     if (!file) {
       setError("Por favor, selecione um arquivo JSON.");
-      return;
+      return false;
     }
 
     setLoading(true);
@@ -38,8 +38,10 @@ export const useScheduleAnalysis = (): UseScheduleAnalysisReturn => {
 
       if (data.success && data.data) {
         setResult(data.data);
+        return true;
       } else {
         setError(data.error || "Erro desconhecido durante a análise");
+        return false;
       }
     } catch (err) {
       const errorMessage =
@@ -47,6 +49,7 @@ export const useScheduleAnalysis = (): UseScheduleAnalysisReturn => {
           ? err.message
           : "Erro ao conectar com o servidor. Certifique-se de que a API está rodando.";
       setError(errorMessage);
+      return false;
     } finally {
       setLoading(false);
     }
