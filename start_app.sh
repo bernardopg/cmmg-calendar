@@ -67,7 +67,23 @@ resolve_listening_port() {
     local port=""
 
     for ((i = 1; i <= attempts; i++)); do
-        port="$(lsof -Pan -p "$pid" -iTCP -sTCP:LISTEN 2>/dev/null | awk 'NR > 1 {split($9, parts, ":"); print parts[length(parts)]; exit}')"
+        port="$(
+            lsof -Pan -p "$pid" -iTCP -sTCP:LISTEN -FnP 2>/dev/null |
+                awk '
+                    /^n/ {
+                        addr = $0
+                        sub(/^n/, "", addr)
+
+                        n = split(addr, parts, ":")
+                        port = parts[n]
+
+                        if (port ~ /^[0-9]+$/) {
+                            print port
+                            exit
+                        }
+                    }
+                '
+        )"
 
         if [ -n "$port" ]; then
             printf '%s\n' "$port"
@@ -80,6 +96,10 @@ resolve_listening_port() {
 
         sleep 1
     done
+
+    if kill -0 "$pid" 2>/dev/null; then
+        printf 'Failed to resolve listening port for PID %s after %s attempts\n' "$pid" "$attempts" >&2
+    fi
 
     return 1
 }
