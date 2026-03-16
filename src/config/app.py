@@ -6,12 +6,15 @@ Manages all application settings from environment variables.
 import os
 from typing import Dict, Any
 
+from .port_utils import parse_port
+
 
 class Config:
     """Application configuration class."""
 
     # Flask configuration
     DEBUG: bool = False
+    HOST: str = '127.0.0.1'
     PORT: int = 5000
     SECRET_KEY: str = 'dev-secret-key'
     TESTING: bool = False
@@ -36,7 +39,8 @@ class Config:
 
         # Flask settings
         self.DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
-        self.PORT = int(os.getenv('PORT', '5000'))
+        self.HOST = os.getenv('HOST', '127.0.0.1')
+        self.PORT = parse_port(os.getenv('PORT', '5000'), 5000)
         self.SECRET_KEY = os.getenv('SECRET_KEY', 'dev-secret-key')
         self.TESTING = os.getenv('FLASK_TESTING', 'False').lower() == 'true'
 

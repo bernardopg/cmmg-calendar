@@ -5,6 +5,7 @@ Uses layered architecture with controllers, services, repositories, and models.
 """
 
 import logging
+import os
 
 # Import Flask and other necessary components
 from flask import Flask
@@ -13,6 +14,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from .config.app import config
+from .config.port_utils import resolve_runtime_port
 from .controllers.schedule_controller import ScheduleController
 from .services.schedule_service import ScheduleService
 
@@ -68,15 +70,30 @@ def main():
     """Main entry point for the application."""
     try:
         app = create_app()
+        resolved_port, port_changed = resolve_runtime_port(
+            config.PORT,
+            host=config.HOST,
+        )
+        if port_changed:
+            logger.warning(
+                "Porta %s indisponível. A API modular será iniciada automaticamente na porta %s.",
+                config.PORT,
+                resolved_port,
+            )
+        config.PORT = resolved_port
+        display_host = (
+            "localhost" if config.HOST in {"127.0.0.1", "0.0.0.0"} else config.HOST
+        )
+        frontend_port = os.getenv("FRONTEND_PORT", "5173")
 
         print("🚀 Iniciando aplicação com arquitetura modular...")
-        print(f"📡 API disponível em: http://localhost:{config.PORT}")
-        print("🌐 Frontend React deve estar em: http://localhost:5173")
+        print(f"📡 API disponível em: http://{display_host}:{config.PORT}")
+        print(f"🌐 Frontend React deve estar em: http://localhost:{frontend_port}")
         print(
             f"📁 Ambiente: {'Desenvolvimento' if getattr(config, 'DEBUG', False) else 'Produção'}"
         )
 
-        app.run(debug=config.DEBUG, port=config.PORT, host="0.0.0.0")
+        app.run(debug=config.DEBUG, port=config.PORT, host=config.HOST)
 
     except Exception as e:
         logger.critical(f"Falha ao iniciar aplicação: {str(e)}", exc_info=True)

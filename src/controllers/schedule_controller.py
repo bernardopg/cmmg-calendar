@@ -52,7 +52,13 @@ class ScheduleController:
         def health_check():
             client_ip = request.remote_addr or "unknown"
             self.logger.info(f"Health check solicitado por {client_ip}")
-            return jsonify({"status": "up", "message": "API funcionando"})
+            return jsonify(
+                {
+                    "status": "up",
+                    "message": "API funcionando",
+                    "port": config.PORT,
+                }
+            )
 
         # Analyze endpoint
         @self.app.route("/analyze", methods=["POST"])
