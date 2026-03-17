@@ -31,6 +31,7 @@ COPY --from=builder /app/react-app/dist/ react-app/dist/
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
+ENV PORT=8080
 
 EXPOSE 8080
 
