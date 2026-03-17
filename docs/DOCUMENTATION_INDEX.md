@@ -9,7 +9,7 @@ Navegação centralizada da documentação do projeto.
 - [Instalação](guides/INSTALLATION.md) — setup local e variáveis de ambiente
 - [Interface Web](guides/WEB_INTERFACE.md) — fluxos de uso da UI
 - [Referência da API](guides/API_REFERENCE.md) — contratos dos endpoints
-- [Status da Migração](guides/MIGRATION_STATUS.md) — o que já foi portado e o que permanece legado
+- [Status da Migração](guides/MIGRATION_STATUS.md)
 
 ## Guias de importação
 
