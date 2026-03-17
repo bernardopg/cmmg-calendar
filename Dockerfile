@@ -31,6 +31,8 @@ RUN npm ci --omit=dev --prefix server
 COPY --from=builder /app/server/dist/ server/dist/
 COPY --from=builder /app/react-app/dist/ react-app/dist/
 
+ENV NODE_ENV=production
+ENV HOST=0.0.0.0
 # Ajusta permissões e roda como usuário não-root
 RUN chown -R node:node /app
 USER node

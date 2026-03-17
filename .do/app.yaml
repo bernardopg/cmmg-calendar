@@ -8,6 +8,7 @@ services:
       deploy_on_push: true
     dockerfile_path: Dockerfile
     instance_size_slug: basic-xxs
+    instance_count: 1
     instance_count: 1https://github.com/bernardopg/cmmg-calendar/pull/23/conflict?name=Dockerfile&base_oid=3bb218743a39d241342ba0e70a32aa4ffd788eeb&head_oid=9c42efeb2eaa86175b3e8bcb5726635ec603ced8
     http_port: 8080
     envs:
