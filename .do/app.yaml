@@ -21,3 +21,7 @@ services:
         value: "30000"
         scope: RUN_TIME
         type: GENERAL
+      - key: PORT
+        value: "8080"
+        scope: RUN_TIME
+        type: GENERAL
