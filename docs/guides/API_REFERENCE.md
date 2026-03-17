@@ -153,7 +153,8 @@ Arquivos relevantes:
 
 Observação:
 
-- o backend também oferece CLI para exportação via `npm run schedule:export -- --input ...`
+- os endpoints `/export/csv` e `/export/ics` seguem existindo apenas no backend Python legado para compatibilidade antiga e não fazem parte do app Node de deploy.
+- a referência histórica desse stack foi movida para `legacy/python/`
 
 ## Formato esperado do JSON
 

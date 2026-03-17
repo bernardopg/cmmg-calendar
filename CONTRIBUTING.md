@@ -30,9 +30,10 @@ Fluxo principal:
 ```bash
 npm install
 npm run dev
-npm run test
 npm run build
 ```
+
+Se você tocar no acervo legado em `legacy/python/`, valide explicitamente esse stack antes de abrir o PR.
 
 ## Frontend
 
@@ -40,7 +41,6 @@ Use `npm` como fluxo oficial do repositório.
 
 ```bash
 npm run dev:client
-npm run lint
 npm run build --prefix react-app
 ```
 

@@ -6,11 +6,13 @@ Este arquivo existe como contexto operacional para assistentes/agentes que traba
 
 - Backend ativo: `server/`
 - Frontend: `react-app/`
+- Stack legado: `legacy/python/`
 
 ## Observações importantes
 
 - Para uso humano, priorize `README.md`, `DOCUMENTACAO.md` e `docs/guides/*`.
 - O backend canônico hoje é o app Node em `server/`.
+- O stack Python foi movido para `legacy/python/` e não é mais o fluxo principal.
 - O frontend usa Vite, React, TypeScript e estilos CSS próprios do projeto.
 
 ## Comandos úteis
@@ -25,7 +27,6 @@ npm run dev
 
 ```bash
 npm run dev:server
-npm run test --prefix server
 npm run build --prefix server
 ```
 

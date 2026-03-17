@@ -1,9 +1,9 @@
 import {
   ApiValidationError,
   type AnalysisResult,
+  type ScheduleData,
   type ScheduleEntry,
 } from "../types.js";
-import { extractScheduleEntries } from "./scheduleEntries.js";
 
 const DAYS_MAP: Record<string, string> = {
   "0": "Domingo",
@@ -44,6 +44,30 @@ function sortCounterEntries(
   return Object.fromEntries(limit ? entries.slice(0, limit) : entries);
 }
 
+function toValidScheduleEntries(payload: unknown): ScheduleEntry[] {
+  if (!payload || typeof payload !== "object" || !("data" in payload)) {
+    throw new ApiValidationError("Estrutura de dados inválida: chave 'data' ausente");
+  }
+
+  const data = (payload as ScheduleData).data;
+  if (!data || typeof data !== "object" || !("SHorarioAluno" in data)) {
+    throw new ApiValidationError(
+      "Estrutura de dados inválida: chave 'SHorarioAluno' ausente",
+    );
+  }
+
+  const rawEntries = data.SHorarioAluno;
+  if (!Array.isArray(rawEntries)) {
+    throw new ApiValidationError(
+      "Estrutura de dados inválida: 'SHorarioAluno' deve ser uma lista",
+    );
+  }
+
+  return rawEntries.filter(
+    (entry): entry is ScheduleEntry => Boolean(entry) && typeof entry === "object",
+  );
+}
+
 function extractMonthYear(rawDate: string): string | null {
   const normalized = rawDate.replace("T00:00:00", "");
   const match = normalized.match(/^(\d{4})-(\d{2})/);
@@ -55,7 +79,7 @@ function extractMonthYear(rawDate: string): string | null {
 }
 
 export function analyzeScheduleDataJson(payload: unknown): AnalysisResult {
-  const entries = extractScheduleEntries(payload);
+  const entries = toValidScheduleEntries(payload);
   const subjects: Record<string, number> = {};
   const timeSlots: Record<string, number> = {};
   const locations: Record<string, number> = {};

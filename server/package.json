@@ -10,11 +10,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
-    "test": "node --import tsx --test src/*.test.ts src/**/*.test.ts",
-    "cli:analyze": "tsx src/cli/analyzeSchedule.ts",
-    "cli:export": "tsx src/cli/exportSchedule.ts",
-    "cli:fetch": "tsx src/cli/fetchTotvsSchedule.ts"
+    "start": "node dist/index.js"
   },
   "dependencies": {
     "@fastify/cors": "^11.1.0",

@@ -6,13 +6,12 @@ const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(CURRENT_DIR, "../../");
 const SERVER_ROOT = path.resolve(CURRENT_DIR, "../");
 const FRONTEND_DIST_DIR = path.join(PROJECT_ROOT, "react-app", "dist");
-
-dotenv.config({ path: path.join(PROJECT_ROOT, ".env") });
-dotenv.config({ path: path.join(SERVER_ROOT, ".env"), override: true });
-
 const TOTVS_BASE_URL =
   process.env.TOTVS_BASE_URL ??
   "https://fundacaoeducacional132827.rm.cloudtotvs.com.br";
+
+dotenv.config({ path: path.join(PROJECT_ROOT, ".env") });
+dotenv.config({ path: path.join(SERVER_ROOT, ".env"), override: true });
 
 function parseInteger(value: string | undefined, fallback: number): number {
   const parsed = Number.parseInt(value ?? "", 10);
@@ -55,11 +54,4 @@ export const config = {
 
 export const limits = {
   maxFileSizeBytes: config.maxFileSizeMb * 1024 * 1024,
-};
-
-export const paths = {
-  currentDir: CURRENT_DIR,
-  projectRoot: PROJECT_ROOT,
-  serverRoot: SERVER_ROOT,
-  frontendDistDir: FRONTEND_DIST_DIR,
 };
