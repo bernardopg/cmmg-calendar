@@ -55,3 +55,10 @@ export const config = {
 export const limits = {
   maxFileSizeBytes: config.maxFileSizeMb * 1024 * 1024,
 };
+
+export const paths = {
+  currentDir: CURRENT_DIR,
+  projectRoot: PROJECT_ROOT,
+  serverRoot: SERVER_ROOT,
+  frontendDistDir: FRONTEND_DIST_DIR,
+};

@@ -7,7 +7,6 @@ Este guia cobre instalação e execução local do CMMG Calendar Analyzer.
 - Node.js `^20.19.0` ou `>=22.12.0`
 - npm 10+
 - Git
-- Python 3.10+ apenas para CLI/stack legado
 
 ## 1) Clone do projeto
 
@@ -88,7 +87,27 @@ Esse fluxo sobe um único processo Node servindo:
 - `react-app/dist`
 - `/api/*`
 
-## 6) Variáveis de ambiente opcionais
+## 6) Utilitários CLI
+
+Analisar JSON:
+
+```bash
+npm run schedule:analyze -- --input data/QuadroHorarioAluno.json
+```
+
+Exportar CSV e ICS:
+
+```bash
+npm run schedule:export -- --input data/QuadroHorarioAluno.json
+```
+
+Buscar JSON no TOTVS via cookie:
+
+```bash
+npm run totvs:fetch -- --cookie 'ASP.NET_SessionId=...; .ASPXAUTH=...'
+```
+
+## 7) Variáveis de ambiente opcionais
 
 Crie `.env` na raiz:
 
@@ -116,19 +135,7 @@ VITE_PORT=5173
 SERVER_PORT=5000
 ```
 
-## 7) Execução CLI legada
-
-```bash
-cd legacy/python
-source venv/bin/activate
-python main.py
-```
-
 ## Problemas comuns
-
-### `python3: command not found`
-
-- instale Python no sistema e valide com `python3 --version`.
 
 ### `npm: command not found`
 
@@ -147,10 +154,6 @@ python main.py
 - confirme que `npm run dev:server` está rodando
 - confirme que o proxy do Vite aponta para a porta certa
 - valide `curl http://localhost:5000/api/health`
-
-### Erro ao instalar dependências Python
-
-- isso afeta apenas o fluxo CLI legado
 
 ## 8) Próximos passos
 

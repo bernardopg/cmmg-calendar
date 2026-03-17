@@ -14,9 +14,15 @@
     "dev": "concurrently -k -n server,client -c cyan,magenta \"npm run dev:server\" \"npm run dev:client\"",
     "install:all": "npm install --prefix react-app && npm install --prefix server",
     "postinstall": "npm run install:all",
+    "lint": "npm run lint --prefix react-app",
+    "test": "npm run test --prefix server",
     "build": "npm run build --prefix react-app && npm run build --prefix server",
+    "check": "npm run lint && npm run test && npm run build",
     "start": "npm run start --prefix server",
     "dev:client": "npm run dev --prefix react-app",
-    "dev:server": "npm run dev --prefix server"
+    "dev:server": "npm run dev --prefix server",
+    "schedule:analyze": "npm run cli:analyze --prefix server --",
+    "schedule:export": "npm run cli:export --prefix server --",
+    "totvs:fetch": "npm run cli:fetch --prefix server --"
   }
 }

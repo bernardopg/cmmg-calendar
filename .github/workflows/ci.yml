@@ -18,25 +18,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Set up Python
-        uses: actions/setup-python@v6
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
         with:
-          python-version: "3.12"
-          cache: pip
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            server/package-lock.json
 
-      - name: Install Python dependencies
+      - name: Install root dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install backend dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          npm ci --prefix server
 
-      - name: Run backend smoke tests
-        run: python test_export_endpoints.py
+      - name: Run backend tests
+        run: npm run test --prefix server
 
-      - name: Verify Python compilation
-        run: python -m compileall api_server.py main.py exports.py analyze_schedule.py src scripts
-
-      - name: Validate startup script syntax
-        run: bash -n start_app.sh
+      - name: Build backend
+        run: npm run build --prefix server
 
   frontend:
     name: frontend

@@ -22,14 +22,13 @@ Formas de uso disponíveis:
 - o app Node serve o build do `react-app/dist` em produção
 - as rotas da API ficam sob `/api/*`
 - a exportação usada pela interface web é client-side
-- `legacy/python/` preserva o backend Flask, a CLI e a refatoração Python antiga
+- o backend também expõe utilitários CLI em Node para análise, exportação e fetch via cookie
 - `react-app/` contém o frontend React + TypeScript
 
 ## Requisitos
 
 - Node.js `^20.19.0` ou `>=22.12.0`
 - npm 10+
-- Python 3.10+ apenas para CLI/stack legado
 
 ## Instalação
 
@@ -39,18 +38,7 @@ Formas de uso disponíveis:
 git clone https://github.com/bernardopg/cmmg-calendar.git
 cd cmmg-calendar
 npm install
-```
-
-Terminal 1:
-
-```bash
-npm run dev:server
-```
-
-Terminal 2:
-
-```bash
-npm run dev:client
+npm run dev
 ```
 
 Fluxo:
@@ -71,18 +59,6 @@ Esse fluxo gera:
 
 - `react-app/dist`
 - `server/dist`
-
-### Stack Python legada
-
-Backend:
-
-```bash
-cd legacy/python
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python api_server.py
-```
 
 ## Uso pela interface web
 
@@ -111,8 +87,7 @@ Pré-requisito:
 Comando:
 
 ```bash
-cd legacy/python
-python main.py
+npm run schedule:export -- --input data/QuadroHorarioAluno.json
 ```
 
 Saída:
@@ -123,8 +98,7 @@ Saída:
 ### Analisar no terminal
 
 ```bash
-cd legacy/python
-python analyze_schedule.py
+npm run schedule:analyze -- --input data/QuadroHorarioAluno.json
 ```
 
 ### Baixar JSON via cookie
@@ -132,8 +106,7 @@ python analyze_schedule.py
 Há também o utilitário:
 
 ```bash
-cd legacy/python
-python scripts/fetch_quadro_horario.py --cookie 'ASP.NET_SessionId=...; .ASPXAUTH=...'
+npm run totvs:fetch -- --cookie 'ASP.NET_SessionId=...; .ASPXAUTH=...'
 ```
 
 Ele salva o arquivo por padrão em `data/QuadroHorarioAluno.json`.
@@ -152,7 +125,7 @@ Base URL local do backend: `http://localhost:5000/api`
 Observação:
 
 - exportação CSV e ICS da interface web é client-side
-- os endpoints `/export/csv` e `/export/ics` existem apenas no backend Python legado em `legacy/python/api_server.py`
+- a API do app Node não expõe endpoints de exportação porque a interface gera CSV e ICS localmente
 
 Detalhes completos estão em [docs/guides/API_REFERENCE.md](docs/guides/API_REFERENCE.md).
 

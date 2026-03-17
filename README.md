@@ -7,7 +7,7 @@ Converte o arquivo `QuadroHorarioAluno.json` em calendários utilizáveis e ofer
 - Backend principal em Node.js com Fastify + TypeScript em `server/`
 - Frontend React + TypeScript em `react-app/`
 - Deploy alvo com um único app Node servindo SPA + `/api/*`
-- Stack Python anterior isolado em `legacy/python/`
+- Migração de Flask/Python concluída
 
 ## Principais Recursos
 
@@ -24,7 +24,6 @@ Converte o arquivo `QuadroHorarioAluno.json` em calendários utilizáveis e ofer
 
 - Node.js `^20.19.0` ou `>=22.12.0`
 - npm 10+
-- Python 3.10+ apenas para o fluxo CLI legado
 - Linux, macOS ou Windows
 
 ## Início Rápido
@@ -83,20 +82,23 @@ TOTVS_CONTEXT_SELECTION_URL=
 
 O backend também aceita `server/.env` para sobrescrever apenas valores do servidor.
 
-### Opção 2: CLI
+### Opção 2: CLI Node
 
 ```bash
-cd legacy/python
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python main.py
+npm run schedule:export -- --input data/QuadroHorarioAluno.json
 ```
 
 Saída:
 
 - `output/GoogleAgenda.csv`
 - `output/ThunderbirdAgenda.ics`
+
+Outros utilitários:
+
+```bash
+npm run schedule:analyze -- --input data/QuadroHorarioAluno.json
+npm run totvs:fetch -- --cookie 'ASP.NET_SessionId=...; .ASPXAUTH=...'
+```
 
 ## Uso pela Interface
 
@@ -126,7 +128,6 @@ curl -X POST \
 Observação:
 
 - exportação CSV e ICS da interface continua client-side em `react-app/src/utils/exportUtils.ts`
-- os endpoints Flask `/export/csv` e `/export/ics` permanecem apenas no stack Python legado
 
 ## Estrutura do Projeto
 
@@ -134,8 +135,6 @@ Observação:
 cmmg-calendar/
 ├── package.json
 ├── server/
-├── legacy/
-│   └── python/
 ├── react-app/
 └── docs/
 ```
@@ -143,8 +142,7 @@ cmmg-calendar/
 Observação:
 
 - `server/` é o backend principal atual.
-- `legacy/python/` concentra o stack Flask/CLI antigo para consulta futura.
-- o fluxo principal do projeto não depende mais de Python.
+- o fluxo principal do projeto depende apenas de Node.js.
 
 ## Documentação
 

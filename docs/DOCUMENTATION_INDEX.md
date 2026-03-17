@@ -19,8 +19,6 @@ Navegação centralizada da documentação do projeto.
 ## Material de apoio
 
 - [README_VISUAL](README_VISUAL.md) — organização de capturas e material visual
-- [Legacy Python](../legacy/python/README.md) — backend Flask/CLI antigo preservado para consulta
-- [`legacy/python/scripts/fetch_quadro_horario.py`](../legacy/python/scripts/fetch_quadro_horario.py) — utilitário legado para baixar o JSON via cookie autenticado
 
 ## Governança
 
@@ -38,6 +36,6 @@ Navegação centralizada da documentação do projeto.
 
 1. Leia o [README](../README.md)
 2. Siga o [Guia de Instalação](guides/INSTALLATION.md)
-3. Em desenvolvimento local, suba `npm run dev:server` e `npm run dev:client`
+3. Em desenvolvimento local, suba `npm run dev`
 4. Use o [Guia da Interface Web](guides/WEB_INTERFACE.md) ou a [Referência da API](guides/API_REFERENCE.md)
 5. Consulte o guia de importação apropriado

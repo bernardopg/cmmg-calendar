@@ -16,7 +16,14 @@ export interface ScheduleEntry {
   HORAINICIAL?: string | null;
   HORAFINAL?: string | null;
   DATAINICIAL?: string | null;
+  DATAFINAL?: string | null;
   DIASEMANA?: string | null;
+  CODTURMA?: string | null;
+  CODSUBTURMA?: string | null;
+  NOMEREDUZIDO?: string | null;
+  BLOCO?: string | null;
+  SALA?: string | null;
+  URLAULAONLINE?: string | null;
   [key: string]: unknown;
 }
 
