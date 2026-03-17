@@ -1,0 +1,31 @@
+name: cmmg-calendar
+
+services:
+  - name: web
+    github:
+      repo: bernardopg/cmmg-calendar
+      branch: main
+      deploy_on_push: true
+    build_command: npm run build
+    run_command: npm start
+    environment_slug: node-js
+    instance_size_slug: basic-xxs
+    instance_count: 1
+    http_port: 8080
+    envs:
+      - key: NODE_ENV
+        value: "production"
+        scope: RUN_AND_BUILD_TIME
+        type: GENERAL
+      - key: HOST
+        value: "0.0.0.0"
+        scope: RUN_TIME
+        type: GENERAL
+      - key: MAX_FILE_SIZE_MB
+        value: "10"
+        scope: RUN_TIME
+        type: GENERAL
+      - key: TOTVS_TIMEOUT_MS
+        value: "30000"
+        scope: RUN_TIME
+        type: GENERAL
