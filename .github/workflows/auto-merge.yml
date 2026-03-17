@@ -1,18 +1,18 @@
 name: Auto Merge
 
 on:
+  # Habilita auto-merge e resolve threads na abertura/atualização do PR
   pull_request:
     types: [opened, reopened, ready_for_review, synchronize]
-  pull_request_review_thread:
-    types: [created]
+  # Resolve threads quando um bot (Sourcery, Copilot, etc.) submete uma revisão
+  pull_request_review:
+    types: [submitted]
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  # Habilita auto-merge na criação/atualização do PR.
-  # Quando o CI (backend + frontend) passar, o GitHub faz o merge automaticamente.
   enable-automerge:
     name: Habilitar auto-merge
     if: >-
@@ -26,8 +26,6 @@ jobs:
         run: |
           gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}" || true
 
-  # Resolve qualquer thread de revisão em aberto (ex: comentários do Copilot).
-  # Necessário porque required_conversation_resolution está ativo no branch main.
   resolve-threads:
     name: Resolver conversas abertas
     if: "!github.event.pull_request.draft"
@@ -40,25 +38,57 @@ jobs:
           REPO: ${{ github.event.repository.name }}
           PR: ${{ github.event.pull_request.number }}
         run: |
-          THREADS=$(gh api graphql \
-            -f query='
-              query($o: String!, $r: String!, $n: Int!) {
-                repository(owner: $o, name: $r) {
-                  pullRequest(number: $n) {
-                    reviewThreads(first: 100) {
-                      nodes { id isResolved }
+          python3 - << 'PYEOF'
+          import os, subprocess, json, sys
+
+          owner = os.environ["OWNER"]
+          repo  = os.environ["REPO"]
+          pr    = int(os.environ["PR"])
+
+          def gql(body: dict) -> dict:
+              r = subprocess.run(
+                  ["gh", "api", "graphql", "--input", "-"],
+                  input=json.dumps(body), capture_output=True, text=True
+              )
+              return json.loads(r.stdout)
+
+          # Busca todos os threads não resolvidos
+          data = gql({
+              "query": """
+                query($o:String!,$r:String!,$n:Int!){
+                  repository(owner:$o,name:$r){
+                    pullRequest(number:$n){
+                      reviewThreads(first:100){nodes{id isResolved}}
                     }
                   }
                 }
-              }' \
-            -f o="$OWNER" -f r="$REPO" -F n="$PR" \
-            --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false) | .id' \
-            2>/dev/null) || true
+              """,
+              "variables": {"o": owner, "r": repo, "n": pr}
+          })
 
-          while IFS= read -r ID; do
-            [[ -z "$ID" ]] && continue
-            echo "Resolvendo thread $ID"
-            gh api graphql \
-              -f query='mutation($id: ID!) { resolveReviewThread(input: { threadId: $id }) { thread { isResolved } } }' \
-              -f id="$ID" --silent || true
-          done <<< "$THREADS"
+          threads = data.get("data", {}) \
+                        .get("repository", {}) \
+                        .get("pullRequest", {}) \
+                        .get("reviewThreads", {}) \
+                        .get("nodes", [])
+
+          pending = [t["id"] for t in threads if not t["isResolved"]]
+          print(f"{len(pending)} thread(s) em aberto para resolver")
+
+          for tid in pending:
+              result = gql({
+                  "query": """
+                    mutation($id:ID!){
+                      resolveReviewThread(input:{threadId:$id}){
+                        thread{isResolved}
+                      }
+                    }
+                  """,
+                  "variables": {"id": tid}
+              })
+              ok = result.get("data", {}) \
+                         .get("resolveReviewThread", {}) \
+                         .get("thread", {}) \
+                         .get("isResolved", False)
+              print(f"{'✓' if ok else '✗'} {tid}")
+          PYEOF
