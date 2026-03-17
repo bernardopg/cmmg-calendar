@@ -6,12 +6,13 @@ const CURRENT_DIR = path.dirname(fileURLToPath(import.meta.url));
 const PROJECT_ROOT = path.resolve(CURRENT_DIR, "../../");
 const SERVER_ROOT = path.resolve(CURRENT_DIR, "../");
 const FRONTEND_DIST_DIR = path.join(PROJECT_ROOT, "react-app", "dist");
-const TOTVS_BASE_URL =
-  process.env.TOTVS_BASE_URL ??
-  "https://fundacaoeducacional132827.rm.cloudtotvs.com.br";
 
 dotenv.config({ path: path.join(PROJECT_ROOT, ".env") });
 dotenv.config({ path: path.join(SERVER_ROOT, ".env"), override: true });
+
+const TOTVS_BASE_URL =
+  process.env.TOTVS_BASE_URL ??
+  "https://fundacaoeducacional132827.rm.cloudtotvs.com.br";
 
 function parseInteger(value: string | undefined, fallback: number): number {
   const parsed = Number.parseInt(value ?? "", 10);

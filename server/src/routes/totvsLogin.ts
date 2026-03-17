@@ -41,6 +41,13 @@ function mapTotvsLoginError(error: unknown): {
     };
   }
 
+  if (error instanceof SyntaxError) {
+    return {
+      statusCode: 502,
+      error: "Resposta do TOTVS não está em JSON válido.",
+    };
+  }
+
   return null;
 }
 
