@@ -34,7 +34,7 @@ def is_port_available(port: int, host: str = "127.0.0.1") -> bool:
 
 
 def find_available_port(
-    preferred_port: int,
+    preferred_port: object,
     host: str = "127.0.0.1",
     max_attempts: int = 200,
 ) -> int:
@@ -47,7 +47,10 @@ def find_available_port(
             sock.bind((host, 0))
             return int(sock.getsockname()[1])
 
-    for candidate in range(normalized_port, normalized_port + max_attempts):
+    for candidate in range(
+        normalized_port,
+        min(normalized_port + max_attempts, 65536),
+    ):
         if is_port_available(candidate, host):
             return candidate
 
@@ -57,7 +60,7 @@ def find_available_port(
 
 
 def resolve_runtime_port(
-    preferred_port: int,
+    preferred_port: object,
     host: str = "127.0.0.1",
     max_attempts: int = 200,
 ) -> tuple[int, bool]:
@@ -78,8 +81,8 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Resolve uma porta TCP livre.")
     parser.add_argument(
         "--preferred-port",
-        type=int,
-        default=5000,
+        type=str,
+        default="5000",
         help="Porta preferida para iniciar a busca.",
     )
     parser.add_argument(

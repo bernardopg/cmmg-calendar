@@ -12,6 +12,10 @@ API_PID=""
 REACT_PID=""
 
 API_HOST="${HOST:-127.0.0.1}"
+API_CONNECT_HOST="$API_HOST"
+if [ "$API_CONNECT_HOST" = "0.0.0.0" ]; then
+    API_CONNECT_HOST="127.0.0.1"
+fi
 FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
 DEFAULT_API_PORT="${PORT:-5000}"
 DEFAULT_FRONTEND_PORT="${FRONTEND_PORT:-5173}"
@@ -253,8 +257,8 @@ API_PORT="$ACTUAL_API_PORT"
 export PORT="$API_PORT"
 export API_PORT="$API_PORT"
 
-API_URL="http://$API_HOST:$API_PORT"
-API_BROWSER_URL="$(display_url "$API_HOST" "$API_PORT")"
+API_URL="http://$API_CONNECT_HOST:$API_PORT"
+API_BROWSER_URL="$(display_url "$API_CONNECT_HOST" "$API_PORT")"
 
 if ! wait_for_http "$API_URL/health" "API" "$API_PID" 30; then
     abort_startup "API não está respondendo em $API_BROWSER_URL."
@@ -280,8 +284,14 @@ npm run dev -- --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort >"$F
 REACT_PID=$!
 echo "🌐 React iniciado com PID: $REACT_PID"
 
-FRONTEND_URL="http://$FRONTEND_HOST:$FRONTEND_PORT"
-FRONTEND_BROWSER_URL="$(display_url "$FRONTEND_HOST" "$FRONTEND_PORT")"
+if [ "$FRONTEND_HOST" = "0.0.0.0" ]; then
+    FRONTEND_CONNECT_HOST="127.0.0.1"
+else
+    FRONTEND_CONNECT_HOST="$FRONTEND_HOST"
+fi
+
+FRONTEND_URL="http://$FRONTEND_CONNECT_HOST:$FRONTEND_PORT"
+FRONTEND_BROWSER_URL="$(display_url "$FRONTEND_CONNECT_HOST" "$FRONTEND_PORT")"
 
 if ! wait_for_http "$FRONTEND_URL" "Frontend" "$REACT_PID" 40; then
     abort_startup "Frontend não está respondendo em $FRONTEND_BROWSER_URL."
