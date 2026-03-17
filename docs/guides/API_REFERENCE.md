@@ -1,6 +1,8 @@
 # Referência da API
 
-Base URL padrão: `http://localhost:5000`
+Base URL local do backend: `http://localhost:5000/api`
+
+Em produção, a expectativa é servir a API no mesmo domínio da SPA, por exemplo `https://scalpel.com.br/api`.
 
 ## Autenticação
 
@@ -8,7 +10,7 @@ Os endpoints locais não exigem autenticação própria da aplicação. Os fluxo
 
 ## Endpoints
 
-### `GET /health`
+### `GET /api/health`
 
 Verifica disponibilidade da API.
 
@@ -17,13 +19,15 @@ Resposta `200`:
 ```json
 {
   "status": "up",
-  "message": "API funcionando"
+  "message": "API funcionando",
+  "port": 5000,
+  "timestamp": "2026-03-17T14:32:28.691Z"
 }
 ```
 
 ---
 
-### `POST /analyze`
+### `POST /api/analyze`
 
 Analisa um arquivo de horário acadêmico enviado em `multipart/form-data`.
 
@@ -35,7 +39,7 @@ Exemplo:
 ```bash
 curl -X POST \
   -F "file=@data/QuadroHorarioAluno.json" \
-  http://localhost:5000/analyze
+  http://localhost:5000/api/analyze
 ```
 
 Resposta `200`:
@@ -67,7 +71,7 @@ Erros comuns:
 
 ---
 
-### `POST /extract-analyze`
+### `POST /api/extract-analyze`
 
 Busca o `QuadroHorarioAluno` no TOTVS usando um cookie de sessão já autenticado e devolve os dados brutos mais a análise consolidada.
 
@@ -81,7 +85,7 @@ Exemplo:
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"totvs_cookie":"ASP.NET_SessionId=...; .ASPXAUTH=..."}' \
-  http://localhost:5000/extract-analyze
+  http://localhost:5000/api/extract-analyze
 ```
 
 Resposta `200`:
@@ -114,7 +118,7 @@ Erros comuns:
 
 ---
 
-### `POST /totvs-login`
+### `POST /api/totvs-login`
 
 Recebe credenciais do Portal do Aluno, faz login no TOTVS, busca o horário e devolve análise mais dados brutos.
 
@@ -127,7 +131,7 @@ Exemplo:
 curl -X POST \
   -H "Content-Type: application/json" \
   -d '{"user":"seu-usuario","password":"sua-senha"}' \
-  http://localhost:5000/totvs-login
+  http://localhost:5000/api/totvs-login
 ```
 
 Erros comuns:
@@ -138,67 +142,19 @@ Erros comuns:
 
 ---
 
-### `POST /export/csv`
+## Exportação
 
-Gera CSV para Google Calendar.
+Na arquitetura Node atual, a exportação CSV e ICS da interface é client-side e não passa pela API.
 
-Aceita:
+Arquivos relevantes:
 
-1. `multipart/form-data` com campo `file`
-2. JSON no corpo (`application/json`)
+- `react-app/src/utils/exportUtils.ts`
+- `react-app/src/components/results/ExportButtons.tsx`
 
-- Limite de taxa: `5 por minuto`
+Observação:
 
-Exemplo com arquivo:
-
-```bash
-curl -X POST \
-  -F "file=@data/QuadroHorarioAluno.json" \
-  http://localhost:5000/export/csv \
-  -o GoogleAgenda.csv
-```
-
-Exemplo com JSON no body:
-
-```bash
-curl -X POST \
-  -H "Content-Type: application/json" \
-  -d @data/QuadroHorarioAluno.json \
-  http://localhost:5000/export/csv \
-  -o GoogleAgenda.csv
-```
-
-Resposta `200`:
-
-- `Content-Type: text/csv; charset=utf-8`
-- `Content-Disposition: attachment; filename=GoogleAgenda.csv`
-
----
-
-### `POST /export/ics`
-
-Gera ICS para Thunderbird e clientes iCalendar.
-
-Aceita:
-
-1. `multipart/form-data` com campo `file`
-2. JSON no corpo (`application/json`)
-
-- Limite de taxa: `5 por minuto`
-
-Exemplo:
-
-```bash
-curl -X POST \
-  -F "file=@data/QuadroHorarioAluno.json" \
-  http://localhost:5000/export/ics \
-  -o ThunderbirdAgenda.ics
-```
-
-Resposta `200`:
-
-- `Content-Type: text/calendar; charset=utf-8`
-- arquivo de download `ThunderbirdAgenda.ics`
+- os endpoints `/export/csv` e `/export/ics` seguem existindo apenas no backend Python legado para compatibilidade antiga e não fazem parte do app Node de deploy.
+- a referência histórica desse stack foi movida para `legacy/python/`
 
 ## Formato esperado do JSON
 
@@ -229,3 +185,4 @@ Resposta `200`:
 - trate `400`, `401`, `413`, `429`, `500` e `502`
 - use timeout de rede no cliente
 - não persista credenciais TOTVS desnecessariamente
+- no frontend web, prefira sempre chamadas relativas como `fetch('/api/...')`

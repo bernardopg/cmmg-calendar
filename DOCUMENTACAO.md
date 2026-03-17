@@ -18,47 +18,70 @@ Formas de uso disponíveis:
 
 ## Arquitetura atual
 
-- `api_server.py` é o backend canônico em produção local
-- `main.py` e `analyze_schedule.py` cobrem a operação por CLI
-- `exports.py` concentra a geração de CSV e ICS
-- `src/` contém a refatoração modular do backend, ainda em evolução
+- `server/` contém o backend atual em Fastify + TypeScript
+- o app Node serve o build do `react-app/dist` em produção
+- as rotas da API ficam sob `/api/*`
+- a exportação usada pela interface web é client-side
+- `legacy/python/` preserva o backend Flask, a CLI e a refatoração Python antiga
 - `react-app/` contém o frontend React + TypeScript
 
 ## Requisitos
 
-- Python 3.10+
 - Node.js `^20.19.0` ou `>=22.12.0`
 - npm 10+
+- Python 3.10+ apenas para CLI/stack legado
 
 ## Instalação
 
-### Execução rápida
+### Desenvolvimento local em watch
 
 ```bash
 git clone https://github.com/bernardopg/cmmg-calendar.git
 cd cmmg-calendar
-./start_app.sh
+npm install
 ```
 
-O script instala dependências ausentes, valida Node.js e sobe backend mais frontend.
+Terminal 1:
 
-### Execução manual
+```bash
+npm run dev:server
+```
+
+Terminal 2:
+
+```bash
+npm run dev:client
+```
+
+Fluxo:
+
+- Fastify em `http://localhost:5000`
+- Vite em `http://localhost:5173`
+- proxy do Vite encaminhando `/api/*` para o servidor Fastify
+- hot reload no frontend e watch no backend via `tsx`
+
+### Build local do app único
+
+```bash
+npm run build
+npm start
+```
+
+Esse fluxo gera:
+
+- `react-app/dist`
+- `server/dist`
+
+### Stack Python legada
 
 Backend:
 
 ```bash
+cd legacy/python
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 python api_server.py
-```
-
-Frontend:
-
-```bash
-cd react-app
-npm install
-npm run dev
 ```
 
 ## Uso pela interface web
@@ -88,6 +111,7 @@ Pré-requisito:
 Comando:
 
 ```bash
+cd legacy/python
 python main.py
 ```
 
@@ -99,6 +123,7 @@ Saída:
 ### Analisar no terminal
 
 ```bash
+cd legacy/python
 python analyze_schedule.py
 ```
 
@@ -107,6 +132,7 @@ python analyze_schedule.py
 Há também o utilitário:
 
 ```bash
+cd legacy/python
 python scripts/fetch_quadro_horario.py --cookie 'ASP.NET_SessionId=...; .ASPXAUTH=...'
 ```
 
@@ -114,16 +140,19 @@ Ele salva o arquivo por padrão em `data/QuadroHorarioAluno.json`.
 
 ## API REST
 
-Base URL padrão: `http://localhost:5000`
+Base URL local do backend: `http://localhost:5000/api`
 
 ### Endpoints disponíveis
 
-- `GET /health`
-- `POST /analyze`
-- `POST /extract-analyze`
-- `POST /totvs-login`
-- `POST /export/csv`
-- `POST /export/ics`
+- `GET /api/health`
+- `POST /api/analyze`
+- `POST /api/extract-analyze`
+- `POST /api/totvs-login`
+
+Observação:
+
+- exportação CSV e ICS da interface web é client-side
+- os endpoints `/export/csv` e `/export/ics` existem apenas no backend Python legado em `legacy/python/api_server.py`
 
 Detalhes completos estão em [docs/guides/API_REFERENCE.md](docs/guides/API_REFERENCE.md).
 
@@ -190,9 +219,10 @@ Verifique:
 
 Verifique:
 
-- backend rodando em `:5000`
+- backend Fastify rodando em `:5000`
 - frontend rodando em `:5173`
 - proxy configurado em `react-app/vite.config.js`
+- `SERVER_PORT`, `API_PORT` ou `PORT` corretos no ambiente do Vite
 
 ### Falha no TOTVS
 
@@ -201,6 +231,7 @@ Verifique:
 - credenciais válidas
 - cookie não expirado
 - disponibilidade do portal
+- variáveis `TOTVS_*` corretas no `.env`, se você sobrescreveu os defaults
 
 ## Documentação relacionada
 

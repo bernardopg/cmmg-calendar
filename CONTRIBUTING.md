@@ -25,19 +25,23 @@ git checkout -b feat/minha-melhoria
 
 ## Backend
 
-- instale dependências via `requirements.txt`
-- valide a API com `python api_server.py`
-- rode `./venv/bin/python test_export_endpoints.py` quando alterar contratos ou exportação
+Fluxo principal:
+
+```bash
+npm install
+npm run dev
+npm run build
+```
+
+Se você tocar no acervo legado em `legacy/python/`, valide explicitamente esse stack antes de abrir o PR.
 
 ## Frontend
 
 Use `npm` como fluxo oficial do repositório.
 
 ```bash
-cd react-app
-npm install
-npm run lint
-npm run build
+npm run dev:client
+npm run build --prefix react-app
 ```
 
 ## Checklist de Pull Request

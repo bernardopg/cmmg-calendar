@@ -4,16 +4,15 @@ Este arquivo existe como contexto operacional para assistentes/agentes que traba
 
 ## Estado atual
 
-- Backend ativo: `api_server.py`
+- Backend ativo: `server/`
 - Frontend: `react-app/`
-- CLI: `main.py`
-- Refatoração modular do backend: `src/`
+- Stack legado: `legacy/python/`
 
 ## Observações importantes
 
 - Para uso humano, priorize `README.md`, `DOCUMENTACAO.md` e `docs/guides/*`.
-- O backend canônico hoje é `api_server.py`.
-- `src/` já possui smoke test e rota de análise/exportação, mas ainda representa a linha de refatoração.
+- O backend canônico hoje é o app Node em `server/`.
+- O stack Python foi movido para `legacy/python/` e não é mais o fluxo principal.
 - O frontend usa Vite, React, TypeScript e estilos CSS próprios do projeto.
 
 ## Comandos úteis
@@ -21,35 +20,34 @@ Este arquivo existe como contexto operacional para assistentes/agentes que traba
 ### Full stack
 
 ```bash
-./start_app.sh
+npm run dev
 ```
 
 ### Backend
 
 ```bash
-./venv/bin/python api_server.py
-./venv/bin/python test_export_endpoints.py
+npm run dev:server
+npm run build --prefix server
 ```
 
 ### Frontend
 
 ```bash
-cd react-app
-npm install
-npm run dev
-npm run lint
-npm run build
+npm run dev:client
+npm run build --prefix react-app
 ```
 
 ## Variáveis de ambiente relevantes
 
-- `FLASK_DEBUG`
-- `SECRET_KEY`
 - `PORT`
-- `MAX_FILE_SIZE`
-- `RATE_LIMIT_STORAGE`
+- `HOST`
+- `MAX_FILE_SIZE_MB`
+- `TOTVS_TIMEOUT_MS`
 - `TOTVS_COOKIE`
 - `TOTVS_QUADRO_URL`
 - `TOTVS_PORTAL_REFERER`
 - `TOTVS_LOGIN_URL`
+- `TOTVS_AUTO_LOGIN_URL`
+- `TOTVS_CONTEXT_URL`
+- `TOTVS_CONTEXT_SELECTION_URL`
 - `TOTVS_DEFAULT_ALIAS`

@@ -28,7 +28,7 @@ Este guia mostra a importação do arquivo `GoogleAgenda.csv` gerado pelo projet
 ### Google rejeita o arquivo
 
 - confirme que o arquivo termina com `.csv`;
-- gere novamente com `python main.py`.
+- gere novamente pela interface web ou pelo CLI legado em `legacy/python/main.py`.
 
 ### Datas/Horários incorretos
 

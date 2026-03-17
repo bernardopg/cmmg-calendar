@@ -4,10 +4,10 @@ Converte o arquivo `QuadroHorarioAluno.json` em calendários utilizáveis e ofer
 
 ## Status
 
-- Backend Flask ativo em `api_server.py`
+- Backend principal em Node.js com Fastify + TypeScript em `server/`
 - Frontend React + TypeScript em `react-app/`
-- CLI local para gerar CSV e ICS em `main.py`
-- Refatoração modular do backend em `src/` ainda em evolução
+- Deploy alvo com um único app Node servindo SPA + `/api/*`
+- Stack Python anterior isolado em `legacy/python/`
 
 ## Principais Recursos
 
@@ -22,37 +22,71 @@ Converte o arquivo `QuadroHorarioAluno.json` em calendários utilizáveis e ofer
 
 ## Requisitos
 
-- Python 3.10+
 - Node.js `^20.19.0` ou `>=22.12.0`
 - npm 10+
+- Python 3.10+ apenas para o fluxo CLI legado
 - Linux, macOS ou Windows
 
 ## Início Rápido
 
-### Opção 1: Web
+### Opção 1: Web em desenvolvimento
 
 ```bash
 git clone https://github.com/bernardopg/cmmg-calendar.git
 cd cmmg-calendar
-./start_app.sh
+npm install
+npm run dev
 ```
 
-O script:
+Esse comando sobe backend e frontend juntos em watch.
 
-- cria `venv/` se necessário;
-- instala dependências Python se necessário;
-- valida a versão do Node.js;
-- instala dependências do frontend se necessário;
-- inicia API em `:5000` e frontend em `:5173`.
+Se preferir processos separados:
+
+```bash
+npm run dev:server
+```
+
+```bash
+npm run dev:client
+```
+
+O fluxo local fica assim:
+
+- Fastify em `http://localhost:5000`
+- Vite em `http://localhost:5173`
+- frontend chamando sempre `fetch('/api/...')`
+- proxy do Vite encaminhando `/api/*` para o Fastify local
 
 Abra:
 
 - Frontend: <http://localhost:5173>
-- API: <http://localhost:5000>
+- API: <http://localhost:5000/api/health>
+
+### Variáveis de ambiente locais
+
+Crie `.env` na raiz do projeto quando precisar customizar portas, limites ou URLs do TOTVS:
+
+```bash
+PORT=5000
+HOST=0.0.0.0
+MAX_FILE_SIZE_MB=10
+TOTVS_TIMEOUT_MS=30000
+TOTVS_COOKIE=
+TOTVS_DEFAULT_ALIAS=CorporeRM
+TOTVS_QUADRO_URL=
+TOTVS_PORTAL_REFERER=
+TOTVS_LOGIN_URL=
+TOTVS_AUTO_LOGIN_URL=
+TOTVS_CONTEXT_URL=
+TOTVS_CONTEXT_SELECTION_URL=
+```
+
+O backend também aceita `server/.env` para sobrescrever apenas valores do servidor.
 
 ### Opção 2: CLI
 
 ```bash
+cd legacy/python
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -76,40 +110,41 @@ Saída:
 
 ## API
 
-- `GET /health`
-- `POST /analyze`
-- `POST /extract-analyze`
-- `POST /totvs-login`
-- `POST /export/csv`
-- `POST /export/ics`
+- `GET /api/health`
+- `POST /api/analyze`
+- `POST /api/extract-analyze`
+- `POST /api/totvs-login`
 
 Exemplo:
 
 ```bash
 curl -X POST \
   -F "file=@data/QuadroHorarioAluno.json" \
-  http://localhost:5000/analyze
+  http://localhost:5000/api/analyze
 ```
+
+Observação:
+
+- exportação CSV e ICS da interface continua client-side em `react-app/src/utils/exportUtils.ts`
+- os endpoints Flask `/export/csv` e `/export/ics` permanecem apenas no stack Python legado
 
 ## Estrutura do Projeto
 
 ```text
 cmmg-calendar/
-├── api_server.py
-├── main.py
-├── analyze_schedule.py
-├── exports.py
-├── start_app.sh
-├── scripts/
-├── src/
+├── package.json
+├── server/
+├── legacy/
+│   └── python/
 ├── react-app/
 └── docs/
 ```
 
 Observação:
 
-- `api_server.py` é o ponto de entrada canônico do backend atual.
-- `src/` concentra a refatoração modular e já possui smoke test em `test_export_endpoints.py`.
+- `server/` é o backend principal atual.
+- `legacy/python/` concentra o stack Flask/CLI antigo para consulta futura.
+- o fluxo principal do projeto não depende mais de Python.
 
 ## Documentação
 
@@ -118,6 +153,7 @@ Observação:
 - Instalação: [docs/guides/INSTALLATION.md](docs/guides/INSTALLATION.md)
 - Interface web: [docs/guides/WEB_INTERFACE.md](docs/guides/WEB_INTERFACE.md)
 - API: [docs/guides/API_REFERENCE.md](docs/guides/API_REFERENCE.md)
+- Migração: [docs/guides/MIGRATION_STATUS.md](docs/guides/MIGRATION_STATUS.md)
 - Google Calendar: [docs/guides/GOOGLE_CALENDAR.md](docs/guides/GOOGLE_CALENDAR.md)
 - Thunderbird: [docs/guides/THUNDERBIRD.md](docs/guides/THUNDERBIRD.md)
 

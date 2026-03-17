@@ -34,7 +34,7 @@ Este guia mostra a importação do arquivo `ThunderbirdAgenda.ics` gerado pelo p
 ### Arquivo não abre/importa
 
 - confira extensão `.ics`;
-- gere novamente com `python main.py`.
+- gere novamente pela interface web ou pelo CLI legado em `legacy/python/main.py`.
 
 ### Eventos com horário incorreto
 
