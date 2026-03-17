@@ -4,7 +4,6 @@ Este guia cobre instalação e execução local do CMMG Calendar Analyzer.
 
 ## Requisitos
 
-- Python 3.10+
 - Node.js `^20.19.0` ou `>=22.12.0`
 - npm 10+
 - Git
@@ -16,91 +15,127 @@ git clone https://github.com/bernardopg/cmmg-calendar.git
 cd cmmg-calendar
 ```
 
-## 2) Método recomendado: script único
+## 2) Instalação recomendada
 
 ```bash
-./start_app.sh
-```
-
-O script:
-
-- cria `venv/` se necessário;
-- instala dependências Python se necessário;
-- valida a versão mínima do Node.js;
-- instala dependências do frontend se `react-app/node_modules` estiver ausente ou incompleto;
-- inicia API Flask em `:5000`;
-- inicia frontend Vite em `:5173`.
-
-## 3) Método manual
-
-### Backend
-
-```bash
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python api_server.py
-```
-
-Observação:
-
-- `api_server.py` é o entrypoint canônico do backend atual.
-
-### Frontend
-
-```bash
-cd react-app
 npm install
+```
+
+Isso instala dependências do `react-app/` e do `server/`.
+
+## 3) Execução local em dev/watch
+
+Fluxo recomendado:
+
+```bash
 npm run dev
 ```
+
+Esse comando sobe:
+
+- backend Fastify em watch
+- frontend Vite em watch
+
+Se preferir abrir em terminais separados:
+
+Terminal 1:
+
+```bash
+npm run dev:server
+```
+
+Terminal 2:
+
+```bash
+npm run dev:client
+```
+
+Resultado esperado:
+
+- backend Fastify em `http://localhost:5000`
+- frontend Vite em `http://localhost:5173`
+- chamadas do browser indo para `/api/*`
+- proxy do Vite redirecionando `/api/*` para o Fastify local
 
 ## 4) Verificação
 
 Backend:
 
 ```bash
-curl http://localhost:5000/health
+curl http://localhost:5000/api/health
 ```
 
 Retorno esperado:
 
 ```json
-{"status":"up","message":"API funcionando"}
+{"status":"up","message":"API funcionando","port":5000}
 ```
 
 Frontend:
 
 - abra `http://localhost:5173`
 
-## 5) Execução CLI
+## 5) Build local e start de produção
 
 ```bash
-source venv/bin/activate
-python main.py
+npm run build
+npm start
 ```
 
-## 6) Variáveis de ambiente opcionais
+Esse fluxo sobe um único processo Node servindo:
 
-Crie um arquivo `.env` na raiz:
+- `react-app/dist`
+- `/api/*`
+
+## 6) Utilitários CLI
+
+Analisar JSON:
 
 ```bash
-FLASK_DEBUG=False
-SECRET_KEY=troque-esta-chave
+npm run schedule:analyze -- --input data/QuadroHorarioAluno.json
+```
+
+Exportar CSV e ICS:
+
+```bash
+npm run schedule:export -- --input data/QuadroHorarioAluno.json
+```
+
+Buscar JSON no TOTVS via cookie:
+
+```bash
+npm run totvs:fetch -- --cookie 'ASP.NET_SessionId=...; .ASPXAUTH=...'
+```
+
+## 7) Variáveis de ambiente opcionais
+
+Crie `.env` na raiz:
+
+```bash
 PORT=5000
-MAX_FILE_SIZE=10
-RATE_LIMIT_STORAGE=memory://
+HOST=0.0.0.0
+MAX_FILE_SIZE_MB=10
+TOTVS_TIMEOUT_MS=30000
 TOTVS_COOKIE=
 TOTVS_QUADRO_URL=
 TOTVS_PORTAL_REFERER=
 TOTVS_LOGIN_URL=
+TOTVS_AUTO_LOGIN_URL=
+TOTVS_CONTEXT_URL=
+TOTVS_CONTEXT_SELECTION_URL=
 TOTVS_DEFAULT_ALIAS=CorporeRM
 ```
 
+Opcionalmente, você pode criar `server/.env` para sobrescrever apenas variáveis do backend.
+
+Para o Vite em desenvolvimento, as portas podem ser ajustadas com:
+
+```bash
+VITE_PORT=5173
+SERVER_PORT=5000
+```
+
 ## Problemas comuns
-
-### `python3: command not found`
-
-- instale Python no sistema e valide com `python3 --version`.
 
 ### `npm: command not found`
 
@@ -112,13 +147,15 @@ TOTVS_DEFAULT_ALIAS=CorporeRM
 
 ### Porta 5000 ou 5173 já em uso
 
-- finalize processos existentes ou ajuste portas manualmente.
+- ajuste `PORT`, `SERVER_PORT` ou `VITE_PORT` no ambiente antes de iniciar.
 
-### Erro ao instalar dependências Python
+### `fetch('/api/...')` retorna erro no frontend
 
-- ative o ambiente virtual antes de rodar `pip install -r requirements.txt`.
+- confirme que `npm run dev:server` está rodando
+- confirme que o proxy do Vite aponta para a porta certa
+- valide `curl http://localhost:5000/api/health`
 
-## Próximos passos
+## 8) Próximos passos
 
 - UI: [WEB_INTERFACE.md](WEB_INTERFACE.md)
 - API: [API_REFERENCE.md](API_REFERENCE.md)

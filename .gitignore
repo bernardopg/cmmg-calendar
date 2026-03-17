@@ -39,6 +39,7 @@ yarn-debug.log*
 yarn-error.log*
 .npm
 .yarn-integrity
+server/dist/
 
 # Environment variables
 .env
@@ -47,6 +48,3 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 tmp/
-
-package-lock.json*
-yarn.lock*

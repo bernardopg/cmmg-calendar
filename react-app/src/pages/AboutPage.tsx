@@ -64,10 +64,10 @@ export const AboutPage = () => {
             </div>
             <h3>Backend</h3>
             <ul className="about-tech-list">
-              <li>Python Flask</li>
-              <li>Pydantic validation</li>
+              <li>Fastify + TypeScript</li>
+              <li>Zod validation</li>
               <li>Rate limiting</li>
-              <li>Structured logging</li>
+              <li>Undici + cookie jar TOTVS</li>
             </ul>
           </div>
         </div>

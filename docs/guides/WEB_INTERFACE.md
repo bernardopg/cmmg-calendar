@@ -1,6 +1,6 @@
 # Guia da Interface Web
 
-Este guia explica os fluxos de uso da aplicação web em `react-app/`, integrada ao backend Flask em `api_server.py`.
+Este guia explica os fluxos de uso da aplicação web em `react-app/`, integrada ao backend Fastify em `server/`.
 
 ## Pré-requisitos
 
@@ -10,7 +10,14 @@ Este guia explica os fluxos de uso da aplicação web em `react-app/`, integrada
 Início rápido:
 
 ```bash
-./start_app.sh
+npm run dev
+```
+
+Ou, em dois terminais:
+
+```bash
+npm run dev:server
+npm run dev:client
 ```
 
 ## Fluxos disponíveis
@@ -54,7 +61,7 @@ Causa provável:
 Ação:
 
 ```bash
-python api_server.py
+npm run dev:server
 ```
 
 ### Erro ao analisar arquivo
@@ -83,12 +90,16 @@ Ação:
 
 ## Ambiente de desenvolvimento
 
+Backend:
+
+```bash
+npm run dev:server
+```
+
 Frontend:
 
 ```bash
-cd react-app
-npm install
-npm run dev
+npm run dev:client
 ```
 
-A aplicação usa proxy em `/api` configurado no Vite para o backend local.
+A aplicação usa `fetch('/api/...')` e o Vite faz proxy de `/api` para o backend local.

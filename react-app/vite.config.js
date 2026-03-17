@@ -4,7 +4,11 @@ import { fileURLToPath, URL } from "node:url";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "");
+  const repoRoot = fileURLToPath(new URL("..", import.meta.url));
+  const env = {
+    ...loadEnv(mode, repoRoot, ""),
+    ...loadEnv(mode, process.cwd(), ""),
+  };
   const configuredPort = Number.parseInt(
     env.VITE_PORT ?? env.FRONTEND_PORT ?? "5173",
     10,
@@ -12,7 +16,7 @@ export default defineConfig(({ mode }) => {
   const frontendPort = Number.isNaN(configuredPort) ? 5173 : configuredPort;
   const apiTarget =
     env.VITE_API_PROXY_TARGET ??
-    `http://127.0.0.1:${env.API_PORT || env.PORT || "5000"}`;
+    `http://127.0.0.1:${env.SERVER_PORT || env.API_PORT || env.PORT || "5000"}`;
 
   return {
     plugins: [react()],
@@ -32,7 +36,6 @@ export default defineConfig(({ mode }) => {
         "/api": {
           target: apiTarget,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ""),
         },
       },
     },
