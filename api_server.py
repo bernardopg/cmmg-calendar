@@ -21,6 +21,7 @@ from flask_limiter.util import get_remote_address
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from exports import extract_horarios, generate_csv, generate_ics
+from src.config.port_utils import parse_port, resolve_runtime_port
 
 # Configuração de logging estruturado
 logging.basicConfig(
@@ -113,7 +114,8 @@ def load_config():
 
     return {
         "DEBUG": os.getenv("FLASK_DEBUG", "False").lower() == "true",
-        "PORT": int(os.getenv("PORT", "5000")),
+        "HOST": os.getenv("HOST", "127.0.0.1"),
+        "PORT": parse_port(os.getenv("PORT", "5000"), 5000),
         "SECRET_KEY": os.getenv("SECRET_KEY", "dev-secret-key"),
         "MAX_FILE_SIZE": int(os.getenv("MAX_FILE_SIZE", "10")),  # MB
         "RATE_LIMIT_STORAGE": normalize_rate_limit_storage(
@@ -675,7 +677,13 @@ def health_check():
 
     Mantém um formato simples para consumo pelo frontend: {"status": "up"}.
     """
-    return jsonify({"status": "up", "message": "API funcionando"})
+    return jsonify(
+        {
+            "status": "up",
+            "message": "API funcionando",
+            "port": config["PORT"],
+        }
+    )
 
 
 @app.route("/extract-analyze", methods=["POST"])
@@ -954,7 +962,19 @@ def export_ics():
 
 
 if __name__ == "__main__":
+    host = config["HOST"]
+    resolved_port, port_changed = resolve_runtime_port(config["PORT"], host=host)
+    if port_changed:
+        logger.warning(
+            "Porta %s indisponível. A API será iniciada automaticamente na porta %s.",
+            config["PORT"],
+            resolved_port,
+        )
+    config["PORT"] = resolved_port
+    display_host = "localhost" if host in {"127.0.0.1", "0.0.0.0"} else host
+    frontend_port = os.getenv("FRONTEND_PORT", "5173")
+
     print("🚀 Iniciando servidor da API...")
-    print(f"📡 API disponível em: http://localhost:{config['PORT']}")
-    print("🌐 Frontend React deve estar em: http://localhost:5173")
-    app.run(debug=config["DEBUG"], port=config["PORT"])
+    print(f"📡 API disponível em: http://{display_host}:{config['PORT']}")
+    print(f"🌐 Frontend React deve estar em: http://localhost:{frontend_port}")
+    app.run(debug=config["DEBUG"], host=host, port=config["PORT"])

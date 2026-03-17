@@ -1,20 +1,181 @@
 #!/bin/bash
 
 # Script para iniciar a aplicação completa
-# Analisador de Horário Acadêmico
+# Resolve conflitos de porta automaticamente para backend e frontend
 
 echo "🎓 Configurando Analisador de Horário Acadêmico..."
 
-# Diretório base (resolve automaticamente a partir da localização do script)
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$BASE_DIR"
 
-# Instalar dependências Python se necessário
-echo "📦 Verificando dependências Python..."
+API_PID=""
+REACT_PID=""
+
+API_HOST="${HOST:-127.0.0.1}"
+API_CONNECT_HOST="$API_HOST"
+if [ "$API_CONNECT_HOST" = "0.0.0.0" ]; then
+    API_CONNECT_HOST="127.0.0.1"
+fi
+FRONTEND_HOST="${FRONTEND_HOST:-127.0.0.1}"
+DEFAULT_API_PORT="${PORT:-5000}"
+DEFAULT_FRONTEND_PORT="${FRONTEND_PORT:-5173}"
+
+TMP_DIR="$BASE_DIR/tmp"
+API_LOG="$TMP_DIR/api_server.dev.log"
+FRONTEND_LOG="$TMP_DIR/frontend.dev.log"
+RUNTIME_ENV_FILE="$TMP_DIR/runtime.env"
+
+mkdir -p "$TMP_DIR"
+: > "$API_LOG"
+: > "$FRONTEND_LOG"
 
 REQUIRED_NODE_VERSION_DISPLAY="20.19+ ou 22.12+"
 
-# Criar ambiente virtual se não existir
+display_url() {
+    local host="$1"
+    local port="$2"
+
+    if [ "$host" = "127.0.0.1" ] || [ "$host" = "0.0.0.0" ]; then
+        echo "http://localhost:$port"
+        return
+    fi
+
+    echo "http://$host:$port"
+}
+
+describe_port_usage() {
+    local port="$1"
+    local usage=""
+
+    usage="$(lsof -nP -iTCP:"$port" -sTCP:LISTEN 2>/dev/null | tail -n +2)"
+    if [ -n "$usage" ]; then
+        printf '%s\n' "$usage"
+        return
+    fi
+
+    ss -ltn "( sport = :$port )" 2>/dev/null | tail -n +2
+}
+
+find_free_port() {
+    local preferred_port="$1"
+    local host="$2"
+
+    ./venv/bin/python -m src.config.port_utils \
+        --preferred-port "$preferred_port" \
+        --host "$host"
+}
+
+resolve_listening_port() {
+    local pid="$1"
+    local attempts="${2:-20}"
+    local port=""
+
+    for ((i = 1; i <= attempts; i++)); do
+        port="$(
+            lsof -Pan -p "$pid" -iTCP -sTCP:LISTEN -FnP 2>/dev/null |
+                awk '
+                    /^n/ {
+                        addr = $0
+                        sub(/^n/, "", addr)
+
+                        n = split(addr, parts, ":")
+                        port = parts[n]
+
+                        if (port ~ /^[0-9]+$/) {
+                            print port
+                            exit
+                        }
+                    }
+                '
+        )"
+
+        if [ -n "$port" ]; then
+            printf '%s\n' "$port"
+            return 0
+        fi
+
+        if ! kill -0 "$pid" 2>/dev/null; then
+            return 1
+        fi
+
+        sleep 1
+    done
+
+    if kill -0 "$pid" 2>/dev/null; then
+        printf 'Failed to resolve listening port for PID %s after %s attempts\n' "$pid" "$attempts" >&2
+    fi
+
+    return 1
+}
+
+wait_for_http() {
+    local url="$1"
+    local label="$2"
+    local pid="$3"
+    local attempts="${4:-30}"
+
+    for ((i = 1; i <= attempts; i++)); do
+        if curl -fsS "$url" >/dev/null 2>&1; then
+            return 0
+        fi
+
+        if [ -n "$pid" ] && ! kill -0 "$pid" 2>/dev/null; then
+            echo "❌ $label encerrou antes de responder."
+            return 1
+        fi
+
+        sleep 1
+    done
+
+    echo "❌ $label não respondeu em tempo hábil: $url"
+    return 1
+}
+
+show_log_tail() {
+    local label="$1"
+    local file="$2"
+
+    if [ -f "$file" ] && [ -s "$file" ]; then
+        echo ""
+        echo "📄 Últimas linhas de $label:"
+        tail -n 20 "$file"
+    fi
+}
+
+stop_servers() {
+    if [ -n "$REACT_PID" ]; then
+        kill "$REACT_PID" 2>/dev/null
+        wait "$REACT_PID" 2>/dev/null
+    fi
+
+    if [ -n "$API_PID" ]; then
+        kill "$API_PID" 2>/dev/null
+        wait "$API_PID" 2>/dev/null
+    fi
+}
+
+abort_startup() {
+    local message="$1"
+
+    echo "❌ $message"
+    show_log_tail "backend" "$API_LOG"
+    show_log_tail "frontend" "$FRONTEND_LOG"
+    stop_servers
+    exit 1
+}
+
+cleanup() {
+    echo ""
+    echo "🛑 Parando servidores..."
+    stop_servers
+    echo "✅ Servidores parados."
+    exit 0
+}
+
+trap cleanup SIGINT SIGTERM
+
+echo "📦 Verificando dependências Python..."
+
 if [ ! -d "venv" ]; then
     echo "🏗️  Criando ambiente virtual Python..."
     python3 -m venv venv
@@ -49,7 +210,6 @@ then
     exit 1
 fi
 
-# Ativar ambiente virtual e instalar dependências
 if ! ./venv/bin/python -c "import flask, requests" 2>/dev/null; then
     echo "⬇️  Instalando dependências Python..."
     ./venv/bin/pip install -r requirements.txt
@@ -57,72 +217,108 @@ else
     echo "✅ Dependências Python já instaladas"
 fi
 
-# Função para verificar se uma porta está em uso
-check_port() {
-    local port=$1
-    if lsof -Pi :$port -sTCP:LISTEN -t >/dev/null; then
-        return 0  # Porta está em uso
-    else
-        return 1  # Porta está livre
+echo "🔎 Resolvendo portas livres..."
+
+API_PORT="$(find_free_port "$DEFAULT_API_PORT" "$API_HOST")" || abort_startup "Não foi possível resolver uma porta livre para a API."
+if [ "$API_PORT" != "$DEFAULT_API_PORT" ]; then
+    echo "⚠️  Porta preferida da API ($DEFAULT_API_PORT) já está em uso."
+    PORT_USAGE="$(describe_port_usage "$DEFAULT_API_PORT")"
+    if [ -n "$PORT_USAGE" ]; then
+        echo "$PORT_USAGE" | sed 's/^/   /'
     fi
-}
-
-# Verificar se as portas estão disponíveis
-if check_port 5000; then
-    echo "⚠️  Porta 5000 já está em uso. O servidor da API pode já estar rodando."
+    echo "➡️  API será iniciada automaticamente na porta $API_PORT."
 else
-    echo "✅ Porta 5000 está disponível para a API"
+    echo "✅ API usará a porta $API_PORT"
 fi
 
-if check_port 5173; then
-    echo "⚠️  Porta 5173 já está em uso. O servidor React pode já estar rodando."
+FRONTEND_PORT="$(find_free_port "$DEFAULT_FRONTEND_PORT" "$FRONTEND_HOST")" || abort_startup "Não foi possível resolver uma porta livre para o frontend."
+if [ "$FRONTEND_PORT" != "$DEFAULT_FRONTEND_PORT" ]; then
+    echo "⚠️  Porta preferida do frontend ($DEFAULT_FRONTEND_PORT) já está em uso."
+    PORT_USAGE="$(describe_port_usage "$DEFAULT_FRONTEND_PORT")"
+    if [ -n "$PORT_USAGE" ]; then
+        echo "$PORT_USAGE" | sed 's/^/   /'
+    fi
+    echo "➡️  Frontend será iniciado automaticamente na porta $FRONTEND_PORT."
 else
-    echo "✅ Porta 5173 está disponível para o React"
+    echo "✅ Frontend usará a porta $FRONTEND_PORT"
 fi
 
-# Iniciar servidor da API em background
+export HOST="$API_HOST"
+export PORT="$API_PORT"
+export FRONTEND_PORT="$FRONTEND_PORT"
+
 echo "🚀 Iniciando servidor da API..."
-./venv/bin/python api_server.py &
+./venv/bin/python api_server.py >"$API_LOG" 2>&1 &
 API_PID=$!
 echo "📡 API iniciada com PID: $API_PID"
 
-# Aguardar um pouco para a API inicializar
-sleep 3
+ACTUAL_API_PORT="$(resolve_listening_port "$API_PID" 20)" || abort_startup "Não foi possível detectar a porta final da API."
+API_PORT="$ACTUAL_API_PORT"
+export PORT="$API_PORT"
+export API_PORT="$API_PORT"
 
-# Verificar se a API está funcionando
-if curl -s http://localhost:5000/health >/dev/null; then
-    echo "✅ API está funcionando!"
-else
-    echo "❌ Erro: API não está respondendo"
+API_URL="http://$API_CONNECT_HOST:$API_PORT"
+API_BROWSER_URL="$(display_url "$API_CONNECT_HOST" "$API_PORT")"
+
+if ! wait_for_http "$API_URL/health" "API" "$API_PID" 30; then
+    abort_startup "API não está respondendo em $API_BROWSER_URL."
 fi
 
-# Iniciar servidor React
+echo "✅ API está funcionando em $API_BROWSER_URL"
+
 echo "⚛️  Iniciando servidor React..."
-cd react-app
+cd "$BASE_DIR/react-app"
 
 if [ ! -d "node_modules" ] || [ ! -x "node_modules/.bin/vite" ]; then
     echo "⬇️  Instalando dependências do frontend..."
-    npm install
+    npm install || abort_startup "Falha ao instalar dependências do frontend."
 else
     echo "✅ Dependências do frontend já instaladas"
 fi
 
-npm run dev &
+export VITE_PORT="$FRONTEND_PORT"
+export VITE_HOST="$FRONTEND_HOST"
+export VITE_API_PROXY_TARGET="$API_URL"
+
+npm run dev -- --host "$FRONTEND_HOST" --port "$FRONTEND_PORT" --strictPort >"$FRONTEND_LOG" 2>&1 &
 REACT_PID=$!
 echo "🌐 React iniciado com PID: $REACT_PID"
 
-# Aguardar um pouco
-sleep 5
+if [ "$FRONTEND_HOST" = "0.0.0.0" ]; then
+    FRONTEND_CONNECT_HOST="127.0.0.1"
+else
+    FRONTEND_CONNECT_HOST="$FRONTEND_HOST"
+fi
+
+FRONTEND_URL="http://$FRONTEND_CONNECT_HOST:$FRONTEND_PORT"
+FRONTEND_BROWSER_URL="$(display_url "$FRONTEND_CONNECT_HOST" "$FRONTEND_PORT")"
+
+if ! wait_for_http "$FRONTEND_URL" "Frontend" "$REACT_PID" 40; then
+    abort_startup "Frontend não está respondendo em $FRONTEND_BROWSER_URL."
+fi
+
+cat > "$RUNTIME_ENV_FILE" <<EOF
+API_HOST=$API_HOST
+API_PORT=$API_PORT
+API_URL=$API_URL
+FRONTEND_HOST=$FRONTEND_HOST
+FRONTEND_PORT=$FRONTEND_PORT
+FRONTEND_URL=$FRONTEND_URL
+VITE_API_PROXY_TARGET=$API_URL
+EOF
 
 echo ""
 echo "🎉 Aplicação iniciada com sucesso!"
 echo ""
 echo "📋 Informações importantes:"
-echo "   🔧 API (Backend): http://localhost:5000"
-echo "   🌐 Interface Web: http://localhost:5173"
+echo "   🔧 API (Backend): $API_BROWSER_URL"
+echo "   🌐 Interface Web: $FRONTEND_BROWSER_URL"
+echo "   📝 Log backend: $API_LOG"
+echo "   📝 Log frontend: $FRONTEND_LOG"
+echo "   ⚙️  Runtime env: $RUNTIME_ENV_FILE"
 echo ""
 echo "📁 Para usar a aplicação:"
-echo "   1. Abra http://localhost:5173 no seu navegador"
+echo "   1. Abra $FRONTEND_BROWSER_URL no seu navegador"
 echo "   2. Faça upload do arquivo QuadroHorarioAluno.json"
 echo "   3. Clique em 'Analisar Horário'"
 echo ""
@@ -131,21 +327,7 @@ echo "   kill $API_PID $REACT_PID"
 echo ""
 echo "💡 Mantenha este terminal aberto enquanto estiver usando o modo monitorado."
 echo "   Para deixar em background de forma persistente, use seu gerenciador de processos preferido."
-
-# Manter o script ativo para mostrar logs se necessário
+echo ""
 echo "📊 Monitorando aplicação... (Pressione Ctrl+C para parar tudo)"
 
-# Função para cleanup quando o script for interrompido
-cleanup() {
-    echo ""
-    echo "🛑 Parando servidores..."
-    kill $API_PID $REACT_PID 2>/dev/null
-    echo "✅ Servidores parados."
-    exit 0
-}
-
-# Capturar sinais de interrupção
-trap cleanup SIGINT SIGTERM
-
-# Aguardar indefinidamente
 wait
