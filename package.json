@@ -23,6 +23,11 @@
     "dev:server": "npm run dev --prefix server",
     "schedule:analyze": "npm run cli:analyze --prefix server --",
     "schedule:export": "npm run cli:export --prefix server --",
-    "totvs:fetch": "npm run cli:fetch --prefix server --"
+    "totvs:fetch": "npm run cli:fetch --prefix server --",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^4.74.0"
   }
 }
