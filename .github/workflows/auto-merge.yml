@@ -1,0 +1,64 @@
+name: Auto Merge
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, synchronize]
+  pull_request_review_thread:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  # Habilita auto-merge na criação/atualização do PR.
+  # Quando o CI (backend + frontend) passar, o GitHub faz o merge automaticamente.
+  enable-automerge:
+    name: Habilitar auto-merge
+    if: >-
+      github.event_name == 'pull_request' &&
+      !github.event.pull_request.draft
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ativar squash auto-merge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}" || true
+
+  # Resolve qualquer thread de revisão em aberto (ex: comentários do Copilot).
+  # Necessário porque required_conversation_resolution está ativo no branch main.
+  resolve-threads:
+    name: Resolver conversas abertas
+    if: "!github.event.pull_request.draft"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolver threads de revisão
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          THREADS=$(gh api graphql \
+            -f query='
+              query($o: String!, $r: String!, $n: Int!) {
+                repository(owner: $o, name: $r) {
+                  pullRequest(number: $n) {
+                    reviewThreads(first: 100) {
+                      nodes { id isResolved }
+                    }
+                  }
+                }
+              }' \
+            -f o="$OWNER" -f r="$REPO" -F n="$PR" \
+            --jq '.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false) | .id' \
+            2>/dev/null) || true
+
+          while IFS= read -r ID; do
+            [[ -z "$ID" ]] && continue
+            echo "Resolvendo thread $ID"
+            gh api graphql \
+              -f query='mutation($id: ID!) { resolveReviewThread(input: { threadId: $id }) { thread { isResolved } } }' \
+              -f id="$ID" --silent || true
+          done <<< "$THREADS"
