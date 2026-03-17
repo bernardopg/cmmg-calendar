@@ -159,7 +159,7 @@ O projeto usa um **Dockerfile multi-stage** para produção:
 ```bash
 # Build local da imagem
 docker build -t cmmg-calendar .
-docker run -p 8080:8080 -e NODE_ENV=production cmmg-calendar
+docker run -p 8080:8080 -e NODE_ENV=production -e PORT=8080 cmmg-calendar
 ```
 
 No DigitalOcean App Platform, o deploy é automático a cada push para `main`.
