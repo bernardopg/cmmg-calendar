@@ -11,6 +11,10 @@ services:
     instance_count: 1
     http_port: 8080
     envs:
+      - key: PORT
+        value: "8080"
+        scope: RUN_TIME
+        type: GENERAL
       - key: MAX_FILE_SIZE_MB
         value: "10"
         scope: RUN_TIME
