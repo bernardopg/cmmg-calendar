@@ -1,6 +1,6 @@
 import {
   Code2,
-  Github,
+  GitFork,
   Heart,
   Layers,
   Server,
@@ -75,7 +75,7 @@ export const AboutPage = () => {
 
       <section className="guide-section fade-up">
         <h2 className="guide-section__title">
-          <Github size={22} />
+          <GitFork size={22} />
           Autor
         </h2>
         <div className="about-author surface-card">
@@ -89,7 +89,7 @@ export const AboutPage = () => {
             rel="noreferrer"
             className="button button--outline button--sm"
           >
-            <Github size={16} />
+            <GitFork size={16} />
             GitHub
           </a>
         </div>
