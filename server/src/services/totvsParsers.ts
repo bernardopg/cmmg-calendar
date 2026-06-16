@@ -51,7 +51,12 @@ export function parseTotvsLoginError(html: string): string | null {
     return null;
   }
 
-  return match[1].split(String.raw`\r`)[0]?.split("<br>")[0]?.trim() ?? null;
+  // A mensagem pode conter quebras de linha reais (\r, \n) ou literais
+  // escapados (\\r, \\n) vindos do JS inline, além de <br>. Corta no
+  // primeiro separador, qualquer que seja a forma.
+  const firstLine = match[1].split(/\\r|\\n|\r|\n|<br\s*\/?>/i)[0];
+  const trimmed = firstLine?.trim();
+  return trimmed ? trimmed : null;
 }
 
 export function extractTotvsLoginForm(html: string): {
