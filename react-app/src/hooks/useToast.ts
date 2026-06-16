@@ -1,18 +1,36 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Toast } from "@/types";
+import { safeRandomId } from "@/utils/idUtils";
 
 const AUTO_DISMISS_MS = 4000;
 
 export const useToast = () => {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const timersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   const removeToast = useCallback((id: string) => {
+    const timer = timersRef.current.get(id);
+    if (timer) {
+      clearTimeout(timer);
+      timersRef.current.delete(id);
+    }
     setToasts((current) => current.filter((toast) => toast.id !== id));
+  }, []);
+
+  // Limpa todos os timers pendentes ao desmontar.
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => {
+      for (const timer of timers.values()) {
+        clearTimeout(timer);
+      }
+      timers.clear();
+    };
   }, []);
 
   const showToast = useCallback(
     (toast: Omit<Toast, "id">) => {
-      const id = crypto.randomUUID?.() ?? Math.random().toString(36).slice(2);
+      const id = safeRandomId();
       const nextToast: Toast = {
         ...toast,
         id,
@@ -20,9 +38,11 @@ export const useToast = () => {
 
       setToasts((current) => [...current, nextToast]);
 
-      window.setTimeout(() => {
+      const timer = setTimeout(() => {
+        timersRef.current.delete(id);
         removeToast(id);
       }, AUTO_DISMISS_MS);
+      timersRef.current.set(id, timer);
     },
     [removeToast],
   );

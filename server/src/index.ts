@@ -15,15 +15,47 @@ import { ApiError } from "./types.js";
 
 export async function buildServer() {
   const app = Fastify({
-    logger: true,
+    logger: {
+      // Evita vazamento de credenciais/cookies do TOTVS em logs de erro.
+      redact: {
+        paths: [
+          "req.headers.cookie",
+          "req.headers.authorization",
+          'req.body.password',
+          'req.body.totvs_cookie',
+          "headers.cookie",
+          "headers.authorization",
+        ],
+        censor: "[REDACTED]",
+      },
+    },
     bodyLimit: limits.maxFileSizeBytes,
   });
 
-  if (config.nodeEnv !== "production") {
-    await app.register(cors, {
-      origin: true,
-    });
+  // Cabeçalhos de segurança básicos em todas as respostas.
+  app.addHook("onSend", async (_request, reply, payload) => {
+    reply.header("X-Content-Type-Options", "nosniff");
+    reply.header("X-Frame-Options", "DENY");
+    reply.header("Referrer-Policy", "no-referrer");
+    reply.header("X-DNS-Prefetch-Control", "off");
+    return payload;
+  });
+
+  // CORS default-secure: libera apenas origens explícitas via CORS_ORIGINS.
+  // Em desenvolvimento (NODE_ENV !== production), reflete a origem para
+  // facilitar o trabalho local com o dev server do Vite.
+  const corsOrigins = (process.env.CORS_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  if (corsOrigins.length > 0) {
+    await app.register(cors, { origin: corsOrigins });
+  } else if (config.nodeEnv !== "production") {
+    await app.register(cors, { origin: true });
   }
+  // Em produção sem CORS_ORIGINS configurado: nenhum CORS cross-origin
+  // é habilitado (mais seguro por padrão).
 
   await app.register(rateLimit, {
     global: false,

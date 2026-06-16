@@ -20,6 +20,20 @@ function pad(value: unknown): string {
   return value == null ? "" : String(value);
 }
 
+/**
+ * Valida que a data (após remover o sufixo de hora) está no formato
+ * `YYYY-MM-DD` e representa uma data real. Evita gerar eventos com datas
+ * inválidas que corrompem o CSV/ICS.
+ */
+function isValidScheduleDate(dateStr: string): boolean {
+  const clean = (dateStr || "").replace("T00:00:00", "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    return false;
+  }
+  const timestamp = Date.parse(`${clean}T00:00:00Z`);
+  return Number.isFinite(timestamp);
+}
+
 function formatDateForGoogle(dateStr: string): string {
   const clean = (dateStr || "").replace("T00:00:00", "");
   const parts = clean.split("-");
@@ -114,6 +128,10 @@ export function generateCsv(entries: ScheduleEntry[]): string {
       continue;
     }
 
+    if (!isValidScheduleDate(String(entry.DATAINICIAL))) {
+      continue;
+    }
+
     const startDate = pad(entry.DATAINICIAL).replace("T00:00:00", "");
     const endDate = pad(entry.DATAFINAL || entry.DATAINICIAL).replace(
       "T00:00:00",
@@ -155,6 +173,10 @@ export function generateIcs(entries: ScheduleEntry[]): string {
       !entry.HORAINICIAL ||
       !entry.HORAFINAL
     ) {
+      continue;
+    }
+
+    if (!isValidScheduleDate(String(entry.DATAINICIAL))) {
       continue;
     }
 

@@ -78,7 +78,7 @@ export const LandingPage = () => {
             <ArrowRight size={16} className="landing-nav-card__arrow" />
           </Link>
 
-          <Link to="/analisador" className="landing-nav-card surface-card card-hover">
+          <Link to="/gerador" className="landing-nav-card surface-card card-hover">
             <BarChart3 size={20} />
             <div>
               <h3>Analisador</h3>
