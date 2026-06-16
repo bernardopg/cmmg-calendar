@@ -28,7 +28,15 @@ jobs:
 
   resolve-threads:
     name: Resolver conversas abertas
-    if: "!github.event.pull_request.draft"
+    if: >-
+      !github.event.pull_request.draft &&
+      (
+        github.event_name == 'pull_request' ||
+        (
+          github.event_name == 'pull_request_review' &&
+          !github.event.pull_request.draft
+        )
+      )
     runs-on: ubuntu-latest
     steps:
       - name: Resolver threads de revisão
