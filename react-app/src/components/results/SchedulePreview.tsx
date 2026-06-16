@@ -67,9 +67,13 @@ const toEventInput = (entry: ScheduleEntry, index: number): EventInput | null =>
   const location = buildLocation(entry);
   const weekday = parseWeekday(startDate);
 
+  // Id determinístico baseado nos dados da entry (com index como
+  // desambiguador para entries idênticas), em vez de só o índice posicional.
+  const stableKey = `${entry.NOME}-${startDate}-${startTime}-${index}`;
+
   if (entry.DATAFINAL && endDate > startDate && weekday >= 0) {
     return {
-      id: `rec-${index}-${entry.NOME}`,
+      id: `rec-${stableKey}`,
       title: entry.NOME,
       daysOfWeek: [weekday],
       startTime,
@@ -81,7 +85,7 @@ const toEventInput = (entry: ScheduleEntry, index: number): EventInput | null =>
   }
 
   return {
-    id: `single-${index}-${entry.NOME}`,
+    id: `single-${stableKey}`,
     title: entry.NOME,
     start: withTime(startDate, startTime),
     end: withTime(startDate, endTime),

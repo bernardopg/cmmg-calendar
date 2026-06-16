@@ -29,7 +29,7 @@ export const FaqPage = () => {
         <div className="guide-faq">
           {faqGeneral.map((item, index) => (
             <FaqItem
-              key={index}
+              key={item.question}
               item={item}
               isOpen={openFaq === index}
               onToggle={() => toggleFaq(index)}
@@ -49,7 +49,7 @@ export const FaqPage = () => {
             const globalIndex = faqGeneral.length + index;
             return (
               <FaqItem
-                key={globalIndex}
+                key={item.question}
                 item={item}
                 isOpen={openFaq === globalIndex}
                 onToggle={() => toggleFaq(globalIndex)}
@@ -70,7 +70,7 @@ export const FaqPage = () => {
             const globalIndex = faqGeneral.length + faqExport.length + index;
             return (
               <FaqItem
-                key={globalIndex}
+                key={item.question}
                 item={item}
                 isOpen={openFaq === globalIndex}
                 onToggle={() => toggleFaq(globalIndex)}

@@ -1,4 +1,5 @@
 import type { ScheduleEntry, ExportOptions } from "@/types";
+import { safeRandomId } from "@/utils/idUtils";
 
 /**
  * Downloads a blob as a file with the specified filename
@@ -176,7 +177,7 @@ export const exportToICS = (
     const location = buildLocationString(entry);
     const description = buildDescriptionString(entry);
 
-    const uid = crypto.randomUUID();
+    const uid = safeRandomId();
 
     // Create timestamp for DTSTAMP
     const now = new Date();
