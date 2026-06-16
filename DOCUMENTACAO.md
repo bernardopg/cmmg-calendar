@@ -1,38 +1,99 @@
-# Documentação Completa
+# Manual do Projeto
 
-Guia oficial de uso, execução e integração do CMMG Calendar Analyzer.
+Este é o manual central do CMMG Calendar. Ele explica o produto, os fluxos de uso, a arquitetura, os comandos e os pontos de operação que precisam estar corretos para desenvolver, manter ou integrar a aplicação.
 
-## Visão geral
+## Resumo Executivo
 
-O projeto recebe um `QuadroHorarioAluno.json` e permite:
+O CMMG Calendar converte dados do quadro de horários acadêmico do Portal do Aluno CMMG em formatos de calendário. O usuário pode autenticar no TOTVS, usar um cookie de sessão ou enviar manualmente o arquivo `QuadroHorarioAluno.json`.
 
-- analisar a grade acadêmica
-- exportar CSV compatível com Google Calendar
-- exportar ICS compatível com Thunderbird e outros clientes iCalendar
+O sistema entrega:
 
-Formas de uso disponíveis:
+- análise do semestre com totais, disciplinas, horários, locais, dias da semana e distribuição mensal;
+- `GoogleAgenda.csv` para Google Calendar;
+- `ThunderbirdAgenda.ics` para Thunderbird, Outlook, Apple Calendar e clientes iCalendar;
+- API HTTP para integração;
+- CLIs locais para análise, exportação e consulta via cookie.
 
-- interface web
-- API REST
-- CLI local
+## Estado Atual do Projeto
 
-## Arquitetura atual
+| Área | Estado canônico |
+| --- | --- |
+| Frontend | `react-app/`, React 19, Vite 8, TypeScript 6 |
+| Backend | `server/`, Fastify 5, TypeScript 6 |
+| Deploy principal | Docker multi-stage com Node 24 no DigitalOcean App Platform |
+| Testes | Node Test Runner no backend |
+| CI | GitHub Actions em Node 24 com jobs `backend` e `frontend` |
+| Migração legada | Migração Flask/Python concluída; backend atual é Node |
 
-- `server/` contém o backend atual em Fastify + TypeScript
-- o app Node serve o build do `react-app/dist` em produção
-- as rotas da API ficam sob `/api/*`
-- a exportação usada pela interface web é client-side
-- o backend também expõe utilitários CLI em Node para análise, exportação e fetch via cookie
-- `react-app/` contém o frontend React + TypeScript
+## Como o Produto Funciona
 
-## Requisitos
+### Fluxo 1: Login TOTVS
 
-- Node.js `^20.19.0` ou `>=22.12.0`
-- npm 10+
+1. Usuário informa usuário e senha do Portal do Aluno.
+2. Frontend chama `POST /api/totvs-login`.
+3. Backend autentica no TOTVS, seleciona contexto acadêmico e busca o `QuadroHorarioAluno`.
+4. Backend devolve análise e dados brutos.
+5. Frontend exibe estatísticas e permite exportar CSV ou ICS no navegador.
 
-## Instalação
+Use quando o portal estiver disponível e as credenciais forem válidas.
 
-### Desenvolvimento local em watch
+### Fluxo 2: Cookie TOTVS
+
+1. Usuário cola o header `Cookie` de uma sessão já autenticada.
+2. Frontend chama `POST /api/extract-analyze`.
+3. Backend consulta diretamente o endpoint `QuadroHorarioAluno` do TOTVS.
+4. Backend devolve análise e dados brutos.
+
+Use como alternativa avançada quando o login automático não funcionar.
+
+### Fluxo 3: Upload JSON
+
+1. Usuário envia `QuadroHorarioAluno.json`.
+2. Frontend valida o formato mínimo (`data.SHorarioAluno`).
+3. Frontend chama `POST /api/analyze` com `multipart/form-data`.
+4. Backend valida, analisa e devolve as estatísticas.
+5. Frontend exporta os arquivos usando os dados carregados no navegador.
+
+Use quando o usuário já tiver o arquivo local.
+
+## Arquitetura
+
+```text
+Browser
+  |
+  | fetch('/api/...')
+  v
+React/Vite SPA
+  |
+  | dev: proxy Vite -> http://127.0.0.1:5000
+  | prod: mesmo domínio, Fastify serve SPA + API
+  v
+Fastify API
+  |
+  | opcional: login/cookie
+  v
+TOTVS Portal Educacional
+```
+
+Componentes principais:
+
+- `react-app/src/pages/HomePage.tsx`: tela do gerador e fluxos de login, cookie e upload.
+- `react-app/src/hooks/useScheduleAnalysis.ts`: chamadas para `/api/analyze`, `/api/extract-analyze` e `/api/totvs-login`.
+- `react-app/src/utils/exportUtils.ts`: geração client-side de CSV e ICS.
+- `server/src/index.ts`: composição do Fastify, CORS, rate limit, headers, estáticos e rotas.
+- `server/src/services/totvsClient.ts`: comunicação com TOTVS.
+- `server/src/services/analyzeSchedule.ts`: cálculo das estatísticas.
+- `server/src/services/exportSchedule.ts`: exportação usada pela CLI.
+
+Detalhes estão em [docs/guides/ARCHITECTURE.md](docs/guides/ARCHITECTURE.md).
+
+## Instalação Local
+
+Requisitos:
+
+- Node.js `^22.12.0` ou `>=24.0.0`
+- npm `>=10`
+- Git
 
 ```bash
 git clone https://github.com/bernardopg/cmmg-calendar.git
@@ -41,179 +102,203 @@ npm install
 npm run dev
 ```
 
-Fluxo:
+URLs locais:
 
-- Fastify em `http://localhost:5000`
-- Vite em `http://localhost:5173`
-- proxy do Vite encaminhando `/api/*` para o servidor Fastify
-- hot reload no frontend e watch no backend via `tsx`
+- Frontend: `http://localhost:5173`
+- API: `http://localhost:5000/api/health`
 
-### Build local do app único
+Veja o passo a passo completo em [docs/guides/INSTALLATION.md](docs/guides/INSTALLATION.md).
 
-```bash
-npm run build
-npm start
+## Comandos
+
+| Comando | Uso |
+| --- | --- |
+| `npm run dev` | Desenvolvimento full stack em watch mode. |
+| `npm run dev:server` | Apenas backend. |
+| `npm run dev:client` | Apenas frontend. |
+| `npm run lint` | Lint do frontend. |
+| `npm run test` | Testes do backend. |
+| `npm run build` | Build de frontend e backend. |
+| `npm run check` | Lint, testes e build. |
+| `npm start` | Executa `server/dist/index.js`. |
+
+CLIs:
+
+| Comando | Resultado |
+| --- | --- |
+| `npm run schedule:analyze -- --input data/QuadroHorarioAluno.json` | Imprime análise no terminal. |
+| `npm run schedule:export -- --input data/QuadroHorarioAluno.json` | Gera `output/GoogleAgenda.csv` e `output/ThunderbirdAgenda.ics`. |
+| `npm run totvs:fetch -- --cookie '...'` | Salva `data/QuadroHorarioAluno.json` consultado no TOTVS. |
+
+Veja [docs/guides/CLI.md](docs/guides/CLI.md).
+
+## Variáveis de Ambiente
+
+As variáveis podem ficar em `.env` na raiz. `server/.env` também é carregado e sobrescreve valores da raiz.
+
+| Variável | Padrão | Uso |
+| --- | --- | --- |
+| `NODE_ENV` | `development` | Ambiente de execução. |
+| `HOST` | `0.0.0.0` | Host do Fastify. |
+| `PORT` | `5000` | Porta do backend local ou processo único. |
+| `MAX_FILE_SIZE_MB` | `10` | Limite de upload em MB. |
+| `TOTVS_TIMEOUT_MS` | `30000` | Timeout das chamadas ao TOTVS. |
+| `TOTVS_BASE_URL` | URL TOTVS CMMG | Base para montar endpoints TOTVS. |
+| `TOTVS_COOKIE` | vazio | Cookie padrão para fluxos via cookie e CLI. |
+| `TOTVS_QUADRO_URL` | derivado de `TOTVS_BASE_URL` | Endpoint do `QuadroHorarioAluno`. |
+| `TOTVS_PORTAL_REFERER` | derivado de `TOTVS_BASE_URL` | Referer esperado pelo portal. |
+| `TOTVS_LOGIN_URL` | derivado de `TOTVS_BASE_URL` | Tela de login do Portal do Aluno. |
+| `TOTVS_AUTO_LOGIN_URL` | derivado de `TOTVS_BASE_URL` | Endpoint de auto-login. |
+| `TOTVS_CONTEXT_URL` | derivado de `TOTVS_BASE_URL` | Endpoint de contexto acadêmico. |
+| `TOTVS_CONTEXT_SELECTION_URL` | derivado de `TOTVS_BASE_URL` | Endpoint de seleção de contexto. |
+| `TOTVS_DEFAULT_ALIAS` | `CorporeRM` | Alias preferido no login TOTVS. |
+| `CORS_ORIGINS` | vazio | Lista separada por vírgula para liberar CORS em produção. |
+| `VITE_PORT` | `5173` | Porta do Vite. |
+| `VITE_API_PROXY_TARGET` | `http://127.0.0.1:$PORT` | Destino do proxy `/api` no Vite. |
+
+## API
+
+Base local: `http://localhost:5000/api`
+
+| Método | Endpoint | Descrição |
+| --- | --- | --- |
+| `GET` | `/api/health` | Status do backend. |
+| `POST` | `/api/analyze` | Analisa arquivo JSON enviado por upload. |
+| `POST` | `/api/extract-analyze` | Consulta TOTVS por cookie e analisa. |
+| `POST` | `/api/totvs-login` | Faz login TOTVS, consulta horário e analisa. |
+
+Resposta de sucesso segue o padrão:
+
+```json
+{
+  "success": true,
+  "data": {}
+}
 ```
 
-Esse fluxo gera:
+Resposta de erro segue o padrão:
 
-- `react-app/dist`
-- `server/dist`
-
-## Uso pela interface web
-
-Há três fluxos disponíveis na página principal:
-
-### Login TOTVS
-
-Informe usuário e senha do Portal do Aluno. O backend chama `/totvs-login`, autentica no TOTVS, busca o horário e devolve a análise.
-
-### Cookie manual
-
-Cole um cookie de sessão autenticada. O backend chama `/extract-analyze`.
-
-### Upload manual
-
-Envie o `QuadroHorarioAluno.json` diretamente. O backend chama `/analyze`.
-
-## Uso via CLI
-
-### Gerar CSV e ICS
-
-Pré-requisito:
-
-- arquivo em `data/QuadroHorarioAluno.json`
-
-Comando:
-
-```bash
-npm run schedule:export -- --input data/QuadroHorarioAluno.json
+```json
+{
+  "success": false,
+  "error": "Mensagem legível"
+}
 ```
 
-Saída:
+Contratos completos: [docs/guides/API_REFERENCE.md](docs/guides/API_REFERENCE.md).
 
-- `output/GoogleAgenda.csv`
-- `output/ThunderbirdAgenda.ics`
+## Formato do JSON de Entrada
 
-### Analisar no terminal
-
-```bash
-npm run schedule:analyze -- --input data/QuadroHorarioAluno.json
-```
-
-### Baixar JSON via cookie
-
-Há também o utilitário:
-
-```bash
-npm run totvs:fetch -- --cookie 'ASP.NET_SessionId=...; .ASPXAUTH=...'
-```
-
-Ele salva o arquivo por padrão em `data/QuadroHorarioAluno.json`.
-
-## API REST
-
-Base URL local do backend: `http://localhost:5000/api`
-
-### Endpoints disponíveis
-
-- `GET /api/health`
-- `POST /api/analyze`
-- `POST /api/extract-analyze`
-- `POST /api/totvs-login`
-
-Observação:
-
-- exportação CSV e ICS da interface web é client-side
-- a API do app Node não expõe endpoints de exportação porque a interface gera CSV e ICS localmente
-
-Detalhes completos estão em [docs/guides/API_REFERENCE.md](docs/guides/API_REFERENCE.md).
-
-## Formato do JSON de entrada
-
-Estrutura esperada:
+Estrutura mínima esperada:
 
 ```json
 {
   "data": {
     "SHorarioAluno": [
       {
-        "NOME": "Matemática",
-        "DATAINICIAL": "2025-03-10T00:00:00",
-        "DATAFINAL": "2025-03-10T00:00:00",
+        "NOME": "Anatomia",
+        "DATAINICIAL": "2026-03-10T00:00:00",
+        "DATAFINAL": "2026-03-10T00:00:00",
         "HORAINICIAL": "08:00:00",
         "HORAFINAL": "10:00:00",
+        "DIASEMANA": "2",
         "PREDIO": "Campus",
         "BLOCO": "A",
         "SALA": "101",
-        "CODTURMA": "MAT01",
-        "DIASEMANA": "1"
+        "CODTURMA": "MED01",
+        "CODSUBTURMA": "A",
+        "NOMEREDUZIDO": "ANA",
+        "URLAULAONLINE": "https://exemplo.invalid/aula"
       }
     ]
   }
 }
 ```
 
-Campos mais relevantes:
+Campos mínimos para análise válida:
 
 - `NOME`
 - `DATAINICIAL`
-- `DATAFINAL`
+
+Campos mínimos para evento ICS:
+
+- `NOME`
+- `DATAINICIAL`
 - `HORAINICIAL`
 - `HORAFINAL`
+
+Campos usados para descrição e localização:
+
 - `PREDIO`, `BLOCO`, `SALA`
 - `CODTURMA`, `CODSUBTURMA`, `NOMEREDUZIDO`, `URLAULAONLINE`
 
-## Arquivos de saída
+## Exportação
 
 ### CSV
 
-- nome padrão: `GoogleAgenda.csv`
-- datas em formato `MM/DD/YYYY`
-- compatível com importação do Google Calendar
+- Nome padrão: `GoogleAgenda.csv`
+- Formato de data: `MM/DD/YYYY`
+- Campos principais: assunto, data/hora inicial, data/hora final, descrição, local e privacidade.
+- Uso principal: importação no Google Calendar.
 
 ### ICS
 
-- nome padrão: `ThunderbirdAgenda.ics`
-- formato `VCALENDAR` + `VEVENT`
-- inclui `UID`, `DTSTAMP`, `DTSTART`, `DTEND`, `SUMMARY`, `DESCRIPTION` e `LOCATION`
+- Nome padrão: `ThunderbirdAgenda.ics`
+- Formato: `VCALENDAR` com múltiplos `VEVENT`.
+- Inclui `UID`, `DTSTAMP`, `DTSTART`, `DTEND`, `SUMMARY`, `DESCRIPTION`, `LOCATION`, `STATUS` e `TRANSP`.
+- Uso principal: Thunderbird, Outlook, Apple Calendar e clientes iCalendar.
 
-## Solução de problemas
+## Segurança e Privacidade
 
-### Arquivo inválido na análise
+- A aplicação não grava credenciais TOTVS em banco de dados.
+- Senhas e cookies são usados apenas para consultar o portal durante a requisição.
+- Logs do backend redigem `cookie`, `authorization`, `password` e `totvs_cookie`.
+- Uploads são limitados por tamanho.
+- Rotas com maior custo têm rate limit.
+- Em produção, CORS cross-origin é bloqueado por padrão e só é liberado via `CORS_ORIGINS`.
 
-Verifique:
+## Deploy
 
-- se o arquivo é JSON válido
-- se `data` contém a chave `SHorarioAluno`
-- se os registros possuem ao menos `NOME` e `DATAINICIAL`
+O deploy principal usa `Dockerfile` multi-stage:
 
-### Frontend sem conexão com a API
+1. `builder`: instala dependências e executa `npm run build`.
+2. `runner`: instala dependências de produção do servidor, copia `server/dist` e `react-app/dist`, roda como usuário `node` e expõe `PORT=8080`.
 
-Verifique:
+Build local da imagem:
 
-- backend Fastify rodando em `:5000`
-- frontend rodando em `:5173`
-- proxy configurado em `react-app/vite.config.js`
-- `SERVER_PORT`, `API_PORT` ou `PORT` corretos no ambiente do Vite
+```bash
+docker build -t cmmg-calendar .
+docker run -p 8080:8080 -e NODE_ENV=production cmmg-calendar
+```
 
-### Falha no TOTVS
+No DigitalOcean App Platform, `.do/app.yaml` aponta para `main`, usa o Dockerfile e habilita deploy automático por push.
 
-Verifique:
+## Qualidade e CI
 
-- credenciais válidas
-- cookie não expirado
-- disponibilidade do portal
-- variáveis `TOTVS_*` corretas no `.env`, se você sobrescreveu os defaults
+Antes de abrir PR:
 
-## Documentação relacionada
+```bash
+npm run check
+```
 
-- [README.md](README.md)
-- [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md)
-- [docs/guides/INSTALLATION.md](docs/guides/INSTALLATION.md)
-- [docs/guides/WEB_INTERFACE.md](docs/guides/WEB_INTERFACE.md)
-- [docs/guides/API_REFERENCE.md](docs/guides/API_REFERENCE.md)
+O CI executa:
 
-## Créditos
+- backend: instalação, testes e build TypeScript;
+- frontend: instalação, lint, `tsc --noEmit` e build Vite;
+- CodeQL e workflows auxiliares de automação.
 
-Projeto desenvolvido e mantido por Bernardo Gomes.
+## Solução de Problemas
+
+Consulte [docs/guides/TROUBLESHOOTING.md](docs/guides/TROUBLESHOOTING.md) para erros de instalação, porta, proxy, upload, TOTVS, importação e build.
+
+## Mapa da Documentação
+
+- [README.md](README.md): visão geral e início rápido.
+- [docs/DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md): navegação central.
+- [docs/guides/INSTALLATION.md](docs/guides/INSTALLATION.md): setup local.
+- [docs/guides/WEB_INTERFACE.md](docs/guides/WEB_INTERFACE.md): uso da interface.
+- [docs/guides/API_REFERENCE.md](docs/guides/API_REFERENCE.md): contratos HTTP.
+- [docs/guides/CLI.md](docs/guides/CLI.md): comandos locais.
+- [docs/guides/ARCHITECTURE.md](docs/guides/ARCHITECTURE.md): arquitetura técnica.
+- [docs/guides/GOOGLE_CALENDAR.md](docs/guides/GOOGLE_CALENDAR.md): importação no Google.
+- [docs/guides/THUNDERBIRD.md](docs/guides/THUNDERBIRD.md): importação por ICS.

@@ -1,105 +1,139 @@
-# Guia da Interface Web
+# Interface Web
 
-Este guia explica os fluxos de uso da aplicação web em `react-app/`, integrada ao backend Fastify em `server/`.
+A interface web é a forma recomendada de uso para estudantes. Ela oferece três caminhos para obter os horários, mostra uma análise do semestre e gera os arquivos de calendário direto no navegador.
 
-## Pré-requisitos
+## Acesso
 
-- API ativa em `http://localhost:5000`
-- frontend ativo em `http://localhost:5173`
+Produção:
 
-Início rápido:
+- <https://calendar.scalpel.com.br>
+
+Desenvolvimento local:
 
 ```bash
 npm run dev
 ```
 
-Ou, em dois terminais:
+URLs locais:
+
+- `http://localhost:5173`: SPA React/Vite
+- `http://localhost:5000/api/health`: API Fastify
+
+## Rotas da Aplicação
+
+| Rota | Finalidade |
+| --- | --- |
+| `/` | Página inicial e apresentação do produto. |
+| `/gerador` | Gerador de calendário: login, cookie, upload, análise e exportação. |
+| `/guia` | Guia de uso dentro da aplicação. |
+| `/faq` | Perguntas frequentes. |
+| `/sobre` | Contexto do projeto e tecnologias. |
+
+## Fluxo Recomendado: Login TOTVS
+
+1. Abra `/gerador`.
+2. Informe usuário e senha do Portal do Aluno.
+3. Clique em `Entrar e Extrair Horário`.
+4. Aguarde a análise.
+5. Revise as estatísticas.
+6. Exporte CSV ou ICS.
+
+Privacidade: a senha é enviada ao backend apenas para autenticar no TOTVS durante a requisição. Ela não é armazenada pela aplicação.
+
+## Fluxo Avançado: Cookie Manual
+
+Use quando o login automático falhar ou quando você já tiver uma sessão autenticada no portal.
+
+1. Entre no Portal do Aluno pelo navegador.
+2. Copie o header `Cookie` da sessão autenticada.
+3. Em `/gerador`, abra `Opções avançadas (cookie manual)`.
+4. Cole o cookie.
+5. Clique em `Extrair via Cookie`.
+
+O cookie precisa conter uma sessão válida do TOTVS, normalmente com valores como `ASP.NET_SessionId` e `.ASPXAUTH`.
+
+## Fluxo Manual: Upload JSON
+
+Use quando você já tiver baixado o arquivo `QuadroHorarioAluno.json`.
+
+1. Abra `/gerador`.
+2. Arraste o arquivo para a área de upload ou clique para selecionar.
+3. Confirme que o arquivo foi reconhecido.
+4. Clique em `Analisar horário`.
+5. Exporte CSV ou ICS.
+
+O frontend valida se o JSON possui o formato mínimo `data.SHorarioAluno` antes de usar os dados para exportação.
+
+## O Que A Análise Mostra
+
+- total de registros encontrados;
+- registros válidos e inválidos;
+- disciplinas mais frequentes;
+- horários mais comuns;
+- locais mais usados;
+- distribuição por dia da semana;
+- distribuição mensal;
+- prévia de eventos do calendário.
+
+## Exportação
+
+| Botão | Arquivo | Melhor para |
+| --- | --- | --- |
+| Exportar CSV | `GoogleAgenda.csv` | Google Calendar |
+| Exportar ICS | `ThunderbirdAgenda.ics` | Thunderbird, Outlook, Apple Calendar e outros |
+
+A exportação da UI é client-side. Isso significa que, depois que os dados estão carregados no navegador, o arquivo é gerado localmente sem uma segunda chamada à API.
+
+## Estados e Erros Comuns
+
+### API offline
+
+Sintomas:
+
+- indicador da API aparece offline;
+- chamadas para `/api/...` falham.
+
+Ações:
 
 ```bash
 npm run dev:server
-npm run dev:client
+curl http://localhost:5000/api/health
 ```
 
-## Fluxos disponíveis
+### Arquivo inválido
 
-### 1) Login no Portal do Aluno
+Sintomas:
 
-Use usuário e senha do TOTVS para que o backend faça login, consulte o `QuadroHorarioAluno` e devolva a análise pronta.
+- upload não gera dados;
+- API retorna erro de JSON inválido ou estrutura inesperada.
 
-### 2) Cookie manual
+Ações:
 
-Cole o header `Cookie` de uma sessão já autenticada no portal. Esse fluxo usa o endpoint `/extract-analyze`.
+- confirme que o arquivo termina em `.json`;
+- confirme que existe `data.SHorarioAluno`;
+- baixe novamente o arquivo no portal.
 
-### 3) Upload manual
+### Login TOTVS falha
 
-Envie o `QuadroHorarioAluno.json` diretamente pela interface. Esse fluxo usa o endpoint `/analyze`.
+Sintomas:
 
-## Fluxo de uso
+- mensagem de credenciais inválidas;
+- erro de conexão com TOTVS;
+- resposta do portal não vem em JSON esperado.
 
-1. Abra `http://localhost:5173`
-2. Escolha login, cookie manual ou upload
-3. Aguarde a análise
-4. Revise os painéis de estatísticas
-5. Exporte CSV ou ICS
+Ações:
 
-## O que a interface mostra
+- teste login diretamente no Portal do Aluno;
+- tente novamente depois se o portal estiver instável;
+- use cookie manual como alternativa;
+- confira se variáveis `TOTVS_*` foram sobrescritas corretamente.
 
-- status da API
-- feedback de upload, autenticação e análise
-- métricas de total, validade e distribuição de registros
-- ações de exportação
+### Eventos duplicados no calendário
 
-## Mensagens de erro comuns
+Isso acontece no app de calendário, não no CMMG Calendar. Para evitar duplicação, importe em um calendário dedicado e apague esse calendário antes de reimportar.
 
-### Erro de conexão
+## Links Úteis
 
-Causa provável:
-
-- API não iniciada
-- proxy do Vite não apontando para a porta correta
-
-Ação:
-
-```bash
-npm run dev:server
-```
-
-### Erro ao analisar arquivo
-
-Causa provável:
-
-- arquivo fora do formato esperado
-- JSON inválido
-- chave `SHorarioAluno` ausente dentro de `data`
-
-Ação:
-
-- valide a estrutura do arquivo e tente novamente
-
-### Erro no login TOTVS
-
-Causa provável:
-
-- credenciais inválidas
-- portal indisponível
-- sessão expirada
-
-Ação:
-
-- tente novamente com credenciais válidas ou use o fluxo por cookie
-
-## Ambiente de desenvolvimento
-
-Backend:
-
-```bash
-npm run dev:server
-```
-
-Frontend:
-
-```bash
-npm run dev:client
-```
-
-A aplicação usa `fetch('/api/...')` e o Vite faz proxy de `/api` para o backend local.
+- [Google Calendar](GOOGLE_CALENDAR.md)
+- [Thunderbird e iCalendar](THUNDERBIRD.md)
+- [Solução de Problemas](TROUBLESHOOTING.md)
