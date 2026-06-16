@@ -1,51 +1,102 @@
-# Guia: Importar no Thunderbird
+# Importar ICS no Thunderbird e Outros Calendários
 
-Este guia mostra a importação do arquivo `ThunderbirdAgenda.ics` gerado pelo projeto.
+Use este guia para importar `ThunderbirdAgenda.ics`. O formato ICS é compatível com Thunderbird, Outlook, Apple Calendar, Google Calendar e vários clientes de calendário.
 
-## Pré-requisitos
+## Antes de Começar
 
-- arquivo `output/ThunderbirdAgenda.ics` gerado com sucesso;
-- Mozilla Thunderbird instalado.
+Você precisa de:
 
-## Método recomendado (menu)
+- arquivo `ThunderbirdAgenda.ics` gerado pela interface web ou pela CLI;
+- Thunderbird ou outro app compatível com iCalendar;
+- calendário de destino criado, preferencialmente separado para as aulas.
+
+## Gerar o Arquivo
+
+Pela interface web:
+
+1. Acesse `/gerador`.
+2. Faça login no TOTVS, use cookie ou envie o JSON manualmente.
+3. Aguarde a análise.
+4. Clique em exportar ICS.
+
+Pela CLI:
+
+```bash
+npm run schedule:export -- --input data/QuadroHorarioAluno.json
+```
+
+Arquivo gerado:
+
+```text
+output/ThunderbirdAgenda.ics
+```
+
+## Importar no Thunderbird
 
 1. Abra o Thunderbird.
-2. Vá para a aba de calendário.
-3. Clique em **Arquivo > Importar**.
-4. Selecione **Calendário**.
-5. Escolha o arquivo `output/ThunderbirdAgenda.ics`.
-6. Defina o calendário de destino.
+2. Acesse a área de calendário.
+3. Selecione `Arquivo > Importar`.
+4. Escolha a opção de calendário.
+5. Selecione `ThunderbirdAgenda.ics`.
+6. Escolha o calendário de destino.
 7. Conclua a importação.
+8. Revise alguns eventos.
 
-## Método alternativo (arrastar e soltar)
+Alternativa: arraste o arquivo `.ics` para a área de calendário e confirme a importação.
 
-1. Abra a aba calendário no Thunderbird.
-2. Arraste `output/ThunderbirdAgenda.ics` para dentro da interface.
-3. Confirme o calendário de destino.
+## Importar em Outros Apps
+
+| App | Caminho comum |
+| --- | --- |
+| Outlook | `Arquivo > Abrir e Exportar > Importar/Exportar` |
+| Apple Calendar | `Arquivo > Importar` |
+| Google Calendar | `Configurações > Importar e exportar` |
+
+Os nomes dos menus podem variar conforme versão e sistema operacional.
+
+## Campos Exportados
+
+| Campo ICS | Origem |
+| --- | --- |
+| `UID` | ID único gerado no momento da exportação |
+| `DTSTAMP` | data/hora da geração do arquivo |
+| `DTSTART` | `DATAINICIAL` + `HORAINICIAL` |
+| `DTEND` | `DATAFINAL` ou `DATAINICIAL` + `HORAFINAL` |
+| `SUMMARY` | `NOME` |
+| `DESCRIPTION` | turma, subturma, código e aula online |
+| `LOCATION` | prédio, bloco e sala |
 
 ## Recomendações
 
-- use o fuso `America/Sao_Paulo`;
-- crie um calendário dedicado (ex.: `Aulas CMMG`);
-- revise alguns eventos após importar.
+- Use fuso `America/Sao_Paulo` no calendário de destino.
+- Importe em calendário dedicado para facilitar reimportações.
+- Revise eventos em semanas diferentes após importar.
+- Se precisar compartilhar o horário com outro app, prefira ICS.
 
-## Problemas comuns
+## Problemas Comuns
 
-### Arquivo não abre/importa
+### Arquivo não importa
 
-- confira extensão `.ics`;
-- gere novamente pela interface web ou com `npm run schedule:export -- --input data/QuadroHorarioAluno.json`.
+Correções:
 
-### Eventos com horário incorreto
+- confirme que o arquivo termina em `.ics`;
+- gere o arquivo novamente;
+- teste importar em um calendário vazio.
 
-- valide o fuso no Thunderbird;
-- confira os horários no JSON de origem.
+### Horário deslocado
+
+Correções:
+
+- confira fuso do app;
+- confirme horários no JSON original;
+- revise se o app interpreta eventos sem timezone explícito de forma diferente.
 
 ### Eventos faltando
 
-- entradas sem campos mínimos podem ser ignoradas no exportador;
-- valide os dados de entrada.
+O exportador ignora entradas sem `NOME`, `DATAINICIAL`, `HORAINICIAL` ou `HORAFINAL`, e também ignora datas inválidas.
 
-## Próximo passo
+## Relacionados
 
-- se quiser usar Google Calendar, veja [GOOGLE_CALENDAR.md](GOOGLE_CALENDAR.md).
+- [Interface Web](WEB_INTERFACE.md)
+- [CLI](CLI.md)
+- [Google Calendar](GOOGLE_CALENDAR.md)

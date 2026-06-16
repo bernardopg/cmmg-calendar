@@ -1,33 +1,53 @@
 # Política de Segurança
 
-## Versões suportadas
+## Versões Suportadas
 
-O projeto atualmente mantém correções de segurança na branch principal (`main`).
+Correções de segurança são mantidas na branch `main`.
 
-## Como reportar vulnerabilidades
+## Como Reportar Vulnerabilidades
 
-Se você identificar uma vulnerabilidade, evite abrir issue pública inicialmente.
+Não abra issue pública com detalhes exploráveis.
 
-Envie um relato com:
+Envie um relato responsável com:
 
 - descrição do problema;
 - impacto potencial;
 - passos de reprodução;
-- sugestão de mitigação (se houver).
+- ambiente afetado;
+- sugestão de mitigação, se houver.
 
-Contato para reporte responsável:
+Contato:
 
-- E-mail: <bernardo.gomes@bebitterbebetter.com.br>
+- <bernardo.gomes@bebitterbebetter.com.br>
 
-## Processo de resposta
+## Processo de Resposta
 
-1. Confirmação de recebimento do reporte.
-2. Triagem técnica.
-3. Correção e validação.
-4. Publicação da correção.
+1. Recebimento e triagem.
+2. Reprodução técnica.
+3. Correção ou mitigação.
+4. Validação local e em CI.
+5. Publicação da correção.
 
-## Boas práticas para usuários
+## Controles Atuais
 
-- mantenha dependências atualizadas;
-- não exponha a API em produção sem controles adicionais;
-- valide entradas e limites de upload.
+- Senhas e cookies TOTVS não são persistidos pela aplicação.
+- Campos sensíveis são redigidos nos logs do backend.
+- Uploads são limitados por `MAX_FILE_SIZE_MB`.
+- Rotas sensíveis têm rate limit.
+- CORS em produção é fechado por padrão e liberado apenas via `CORS_ORIGINS`.
+- CLIs rejeitam caminhos fora da raiz do projeto.
+- Headers básicos de segurança são aplicados em todas as respostas.
+
+## Boas Práticas Para Usuários
+
+- Não compartilhe cookie TOTVS em issues, chats públicos ou prints.
+- Use o site oficial em produção: <https://calendar.scalpel.com.br>.
+- Revogue ou renove sessões se suspeitar exposição de cookie.
+- Importe arquivos de calendário em um calendário dedicado para evitar misturar dados pessoais.
+
+## Boas Práticas Para Mantenedores
+
+- Rode `npm run check` antes de mergear mudanças relevantes.
+- Não registre `password`, `totvs_cookie`, `authorization` ou `cookie` em logs.
+- Não adicione exemplos com credenciais reais.
+- Revise mudanças em dependências com atenção a breaking changes e advisorys.

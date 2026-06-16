@@ -1,41 +1,57 @@
-# Índice de Documentação
+# Índice da Documentação
 
-Navegação centralizada da documentação do projeto.
+Use este arquivo como mapa de navegação. A documentação está organizada por objetivo: começar rápido, operar localmente, integrar com a API, entender a arquitetura ou resolver problemas.
 
-## Guias principais
+## Leitura Recomendada
 
-- [README](../README.md) — visão geral e início rápido
-- [DOCUMENTACAO](../DOCUMENTACAO.md) — guia completo de uso, execução e solução de problemas
-- [Instalação](guides/INSTALLATION.md) — setup local e variáveis de ambiente
-- [Interface Web](guides/WEB_INTERFACE.md) — fluxos de uso da UI
-- [Referência da API](guides/API_REFERENCE.md) — contratos dos endpoints
-- [Status da Migração](guides/MIGRATION_STATUS.md)
+| Se você quer... | Leia |
+| --- | --- |
+| Entender o projeto em poucos minutos | [README](../README.md) |
+| Ter a visão completa do produto e da manutenção | [Manual do Projeto](../DOCUMENTACAO.md) |
+| Rodar o projeto localmente | [Instalação](guides/INSTALLATION.md) |
+| Usar a aplicação web | [Interface Web](guides/WEB_INTERFACE.md) |
+| Integrar com endpoints HTTP | [Referência da API](guides/API_REFERENCE.md) |
+| Usar comandos no terminal | [CLI](guides/CLI.md) |
+| Entender módulos, fluxos e deploy | [Arquitetura](guides/ARCHITECTURE.md) |
+| Corrigir erros comuns | [Solução de Problemas](guides/TROUBLESHOOTING.md) |
 
-## Guias de importação
+## Guias de Uso Final
 
+- [Interface Web](guides/WEB_INTERFACE.md)
 - [Google Calendar](guides/GOOGLE_CALENDAR.md)
-- [Thunderbird](guides/THUNDERBIRD.md)
+- [Thunderbird e iCalendar](guides/THUNDERBIRD.md)
 
-## Material de apoio
+## Guias Técnicos
 
-- [README_VISUAL](README_VISUAL.md) — organização de capturas e material visual
+- [Instalação](guides/INSTALLATION.md)
+- [Referência da API](guides/API_REFERENCE.md)
+- [CLI](guides/CLI.md)
+- [Arquitetura](guides/ARCHITECTURE.md)
+- [Status da Migração](guides/MIGRATION_STATUS.md)
+- [Solução de Problemas](guides/TROUBLESHOOTING.md)
 
 ## Governança
 
 - [Contribuição](../CONTRIBUTING.md)
-- [Código de Conduta](../CODE_OF_CONDUCT.md)
 - [Segurança](../SECURITY.md)
-- [Licença](../LICENSE)
+- [Código de Conduta](../CODE_OF_CONDUCT.md)
 - [Créditos](../CREDITS.md)
+- [Licença](../LICENSE)
 
-## Contexto para agentes
+## Materiais Visuais
 
-- [CLAUDE](../CLAUDE.md) — contexto operacional para assistentes/agentes; não substitui a documentação principal para humanos
+- [Padrão de imagens da documentação](README_VISUAL.md)
 
-## Fluxo recomendado
+## Contexto Para Agentes
 
-1. Leia o [README](../README.md)
-2. Siga o [Guia de Instalação](guides/INSTALLATION.md)
-3. Em desenvolvimento local, suba `npm run dev`
-4. Use o [Guia da Interface Web](guides/WEB_INTERFACE.md) ou a [Referência da API](guides/API_REFERENCE.md)
-5. Consulte o guia de importação apropriado
+- [CLAUDE.md](../CLAUDE.md) contém contexto operacional para assistentes. Ele não substitui a documentação para humanos.
+
+## Checklist Para Atualizar Documentação
+
+Antes de fechar uma mudança que afeta comportamento, confira:
+
+- `README.md` continua correto para novos usuários.
+- `DOCUMENTACAO.md` reflete arquitetura, comandos e variáveis atuais.
+- Guias em `docs/guides/` não citam rotas, comandos ou versões antigas.
+- Exemplos de `curl` ainda batem com a API real.
+- Links relativos funcionam a partir do arquivo onde aparecem.

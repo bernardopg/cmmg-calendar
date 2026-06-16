@@ -1,42 +1,69 @@
-# Guia de Instalação
+# Instalação e Ambiente Local
 
-Este guia cobre instalação e execução local do CMMG Calendar Analyzer.
+Este guia cobre o ambiente local do CMMG Calendar: instalação, execução, build, variáveis de ambiente e validação básica.
 
 ## Requisitos
 
-- Node.js `^20.19.0` ou `>=22.12.0`
-- npm 10+
-- Git
+| Ferramenta | Versão |
+| --- | --- |
+| Node.js | `^22.12.0` ou `>=24.0.0` |
+| npm | `>=10` |
+| Git | qualquer versão recente |
 
-## 1) Clone do projeto
+Valide antes de instalar:
+
+```bash
+node -v
+npm -v
+```
+
+## Instalação
 
 ```bash
 git clone https://github.com/bernardopg/cmmg-calendar.git
 cd cmmg-calendar
-```
-
-## 2) Instalação recomendada
-
-```bash
 npm install
 ```
 
-Isso instala dependências do `react-app/` e do `server/`.
+O `postinstall` da raiz executa `npm install` em `react-app/` e `server/`. Se precisar reinstalar manualmente:
 
-## 3) Execução local em dev/watch
+```bash
+npm run install:all
+```
 
-Fluxo recomendado:
+## Desenvolvimento Full Stack
 
 ```bash
 npm run dev
 ```
 
-Esse comando sobe:
+Esse comando sobe dois processos em paralelo:
 
-- backend Fastify em watch
-- frontend Vite em watch
+| Processo | Comando interno | URL padrão |
+| --- | --- | --- |
+| Backend | `npm run dev --prefix server` | `http://localhost:5000` |
+| Frontend | `npm run dev --prefix react-app` | `http://localhost:5173` |
 
-Se preferir abrir em terminais separados:
+Teste a API:
+
+```bash
+curl http://localhost:5000/api/health
+```
+
+Resposta esperada:
+
+```json
+{
+  "status": "up",
+  "message": "API funcionando",
+  "port": 5000,
+  "timestamp": "2026-06-16T14:32:28.691Z"
+}
+```
+
+## Processos Separados
+
+Use dois terminais quando quiser depurar um lado sem reiniciar o outro.
 
 Terminal 1:
 
@@ -50,72 +77,75 @@ Terminal 2:
 npm run dev:client
 ```
 
-Resultado esperado:
+## Proxy do Frontend
 
-- backend Fastify em `http://localhost:5000`
-- frontend Vite em `http://localhost:5173`
-- chamadas do browser indo para `/api/*`
-- proxy do Vite redirecionando `/api/*` para o Fastify local
+Em desenvolvimento, o frontend chama `/api/...`. O Vite encaminha essas chamadas para:
 
-## 4) Verificação
+```text
+VITE_API_PROXY_TARGET
+ou http://127.0.0.1:${SERVER_PORT || API_PORT || PORT || 5000}
+```
 
-Backend:
+Configurações úteis:
 
 ```bash
-curl http://localhost:5000/api/health
+VITE_PORT=5173 npm run dev:client
+SERVER_PORT=5001 npm run dev:client
+VITE_API_PROXY_TARGET=http://127.0.0.1:5001 npm run dev:client
 ```
 
-Retorno esperado:
-
-```json
-{"status":"up","message":"API funcionando","port":5000}
-```
-
-Frontend:
-
-- abra `http://localhost:5173`
-
-## 5) Build local e start de produção
+## Build Local
 
 ```bash
 npm run build
+```
+
+Saídas geradas:
+
+- `react-app/dist/`
+- `server/dist/`
+
+Para executar o app compilado:
+
+```bash
 npm start
 ```
 
-Esse fluxo sobe um único processo Node servindo:
+Nesse modo, o Fastify serve a API e a SPA compilada no mesmo processo.
 
-- `react-app/dist`
-- `/api/*`
-
-## 6) Utilitários CLI
-
-Analisar JSON:
+## Verificações de Qualidade
 
 ```bash
-npm run schedule:analyze -- --input data/QuadroHorarioAluno.json
+npm run lint
+npm run test
+npm run build
 ```
 
-Exportar CSV e ICS:
+Ou tudo de uma vez:
 
 ```bash
-npm run schedule:export -- --input data/QuadroHorarioAluno.json
+npm run check
 ```
 
-Buscar JSON no TOTVS via cookie:
+## Variáveis de Ambiente
 
-```bash
-npm run totvs:fetch -- --cookie 'ASP.NET_SessionId=...; .ASPXAUTH=...'
-```
+O backend carrega `.env` na raiz e depois `server/.env`. Valores em `server/.env` têm prioridade.
 
-## 7) Variáveis de ambiente opcionais
+Exemplo de `.env`:
 
-Crie `.env` na raiz:
-
-```bash
-PORT=5000
+```env
+NODE_ENV=development
 HOST=0.0.0.0
+PORT=5000
 MAX_FILE_SIZE_MB=10
 TOTVS_TIMEOUT_MS=30000
+TOTVS_BASE_URL=https://fundacaoeducacional132827.rm.cloudtotvs.com.br
+TOTVS_DEFAULT_ALIAS=CorporeRM
+```
+
+Variáveis TOTVS opcionais:
+
+```env
 TOTVS_COOKIE=
 TOTVS_QUADRO_URL=
 TOTVS_PORTAL_REFERER=
@@ -123,40 +153,60 @@ TOTVS_LOGIN_URL=
 TOTVS_AUTO_LOGIN_URL=
 TOTVS_CONTEXT_URL=
 TOTVS_CONTEXT_SELECTION_URL=
-TOTVS_DEFAULT_ALIAS=CorporeRM
 ```
 
-Opcionalmente, você pode criar `server/.env` para sobrescrever apenas variáveis do backend.
+Se essas URLs ficarem vazias, o backend usa os padrões derivados de `TOTVS_BASE_URL`.
 
-Para o Vite em desenvolvimento, as portas podem ser ajustadas com:
+Variáveis de CORS:
+
+```env
+CORS_ORIGINS=https://calendar.scalpel.com.br,https://outro-dominio.exemplo
+```
+
+Comportamento:
+
+- Em desenvolvimento sem `CORS_ORIGINS`, o backend reflete a origem para facilitar o uso com Vite.
+- Em produção sem `CORS_ORIGINS`, CORS cross-origin não é habilitado.
+
+## Docker
+
+Build local:
 
 ```bash
-VITE_PORT=5173
-SERVER_PORT=5000
+docker build -t cmmg-calendar .
 ```
 
-## Problemas comuns
+Execução:
 
-### `npm: command not found`
+```bash
+docker run -p 8080:8080 -e NODE_ENV=production cmmg-calendar
+```
 
-- instale Node.js + npm e valide com `node -v` e `npm -v`.
+Com variáveis extras:
 
-### Versão do Node incompatível
+```bash
+docker run \
+  -p 8080:8080 \
+  -e NODE_ENV=production \
+  -e PORT=8080 \
+  -e CORS_ORIGINS=https://calendar.scalpel.com.br \
+  cmmg-calendar
+```
 
-- use Node.js `20.19+` ou `22.12+`.
+## Deploy DigitalOcean
 
-### Porta 5000 ou 5173 já em uso
+O arquivo `.do/app.yaml` define:
 
-- ajuste `PORT`, `SERVER_PORT` ou `VITE_PORT` no ambiente antes de iniciar.
+- serviço `web`;
+- branch `main`;
+- `deploy_on_push: true`;
+- build via `Dockerfile`;
+- porta HTTP `8080`;
+- variáveis de runtime básicas.
 
-### `fetch('/api/...')` retorna erro no frontend
+## Próximos Passos
 
-- confirme que `npm run dev:server` está rodando
-- confirme que o proxy do Vite aponta para a porta certa
-- valide `curl http://localhost:5000/api/health`
-
-## 8) Próximos passos
-
-- UI: [WEB_INTERFACE.md](WEB_INTERFACE.md)
-- API: [API_REFERENCE.md](API_REFERENCE.md)
-- importação: [GOOGLE_CALENDAR.md](GOOGLE_CALENDAR.md) e [THUNDERBIRD.md](THUNDERBIRD.md)
+- [Interface Web](WEB_INTERFACE.md)
+- [Referência da API](API_REFERENCE.md)
+- [CLI](CLI.md)
+- [Solução de Problemas](TROUBLESHOOTING.md)

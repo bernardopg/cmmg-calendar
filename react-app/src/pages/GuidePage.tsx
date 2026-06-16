@@ -31,7 +31,7 @@ export const GuidePage = () => {
       {/* Quick Steps */}
       <section className="guide-section fade-up">
         <h2 className="guide-section__title">Como funciona</h2>
-        <p className="guide-section__desc">Três passos simples para organizar seu semestre.</p>
+        <p className="guide-section__desc">Use login TOTVS, cookie manual ou upload do JSON para organizar seu semestre.</p>
 
         <div className="guide-steps">
           <div className="guide-step surface-card card-hover">
@@ -39,8 +39,8 @@ export const GuidePage = () => {
             <div className="guide-step__icon">
               <FileJson size={24} />
             </div>
-            <h3>Obtenha o JSON</h3>
-            <p>Exporte o arquivo <code>QuadroHorarioAluno.json</code> no portal acadêmico.</p>
+            <h3>Obtenha os dados</h3>
+            <p>Entre com o login do Portal do Aluno, use cookie manual ou selecione o <code>QuadroHorarioAluno.json</code>.</p>
           </div>
 
           <div className="guide-steps__arrow">
@@ -52,8 +52,8 @@ export const GuidePage = () => {
             <div className="guide-step__icon">
               <Upload size={24} />
             </div>
-            <h3>Faça o upload</h3>
-            <p>Arraste o arquivo ou clique para selecioná-lo na página do gerador.</p>
+            <h3>Analise o horário</h3>
+            <p>A aplicação valida os dados e mostra estatísticas de disciplinas, dias, horários e locais.</p>
           </div>
 
           <div className="guide-steps__arrow">
@@ -82,16 +82,16 @@ export const GuidePage = () => {
                 <FileJson size={20} />
               </div>
               <div>
-                <h3>1. Obtendo o arquivo JSON</h3>
-                <p>Acesse o portal acadêmico do CMMG</p>
+                <h3>1. Obtendo os dados do horário</h3>
+                <p>Escolha o método mais conveniente</p>
               </div>
             </div>
             <div className="guide-detail-card__body">
               <ol className="guide-ol">
-                <li>Acesse o <strong>portal acadêmico</strong> com seu login e senha.</li>
-                <li>Navegue até a seção de <strong>Quadro de Horários</strong>.</li>
-                <li>O portal gera um arquivo chamado <code>QuadroHorarioAluno.json</code>.</li>
-                <li>Salve o arquivo no seu computador ou celular.</li>
+                <li>Use <strong>login automático</strong> com as credenciais do Portal do Aluno.</li>
+                <li>Ou use <strong>cookie manual</strong> se já tiver uma sessão TOTVS autenticada.</li>
+                <li>Ou faça upload do arquivo <code>QuadroHorarioAluno.json</code> baixado do portal.</li>
+                <li>Em qualquer fluxo, os dados são analisados antes da exportação.</li>
               </ol>
               <div className="guide-tip">
                 <Zap size={16} />
@@ -112,14 +112,14 @@ export const GuidePage = () => {
             </div>
             <div className="guide-detail-card__body">
               <ol className="guide-ol">
-                <li>Vá até o <Link to="/gerador"><strong>Gerador de Calendário</strong></Link> ou <Link to="/analisador"><strong>Analisador</strong></Link>.</li>
-                <li><strong>Arraste o arquivo</strong> para a área tracejada ou clique para selecionar.</li>
-                <li>Confira se o nome do arquivo aparece confirmado.</li>
-                <li>Clique em <strong>"Analisar horário"</strong> para processar.</li>
+                <li>Vá até o <Link to="/gerador"><strong>Gerador de Calendário</strong></Link>.</li>
+                <li>Preencha login e senha, cole um cookie ou selecione o arquivo JSON.</li>
+                <li>Confira se a análise retornou os dados esperados.</li>
+                <li>Revise as estatísticas antes de exportar.</li>
               </ol>
               <div className="guide-tip">
                 <ShieldCheck size={16} />
-                <span><strong>Privacidade:</strong> O arquivo é processado apenas para gerar o resultado. Nenhum dado é armazenado.</span>
+                <span><strong>Privacidade:</strong> credenciais, cookies e arquivos são usados apenas para processar a requisição. Nenhum dado é armazenado pela aplicação.</span>
               </div>
             </div>
           </div>

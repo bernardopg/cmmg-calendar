@@ -1,19 +1,32 @@
 # Status da Migração
 
-A migração de Flask/Python para Node.js foi concluída.
+A migração do backend Flask/Python para Node.js foi concluída. Este arquivo permanece como registro histórico para evitar dúvidas sobre qual stack é canônica.
 
-## Estado atual
+## Estado Atual
 
-- backend principal em `server/` com Fastify + TypeScript
-- rotas `/api/health`, `/api/analyze`, `/api/extract-analyze` e `/api/totvs-login`
-- fluxo local com `npm run dev`, `npm run dev:server` e `npm run dev:client`
-- build único com frontend em `react-app/dist` e backend em `server/dist`
-- utilitários CLI Node para análise, exportação e fetch via cookie
-- testes automatizados do backend Node em `server/src/*.test.ts`
-- CI baseada apenas em Node.js
+| Área | Status |
+| --- | --- |
+| Backend canônico | `server/` com Fastify + TypeScript |
+| Frontend canônico | `react-app/` com React + Vite + TypeScript |
+| API ativa | `/api/health`, `/api/analyze`, `/api/extract-analyze`, `/api/totvs-login` |
+| CLI ativa | comandos Node em `server/src/cli/` |
+| Testes ativos | Node Test Runner em `server/src/**/*.test.ts` |
+| CI ativa | GitHub Actions com Node 24 |
+| Deploy principal | Docker Node 24 no DigitalOcean App Platform |
 
-## Resultado
+## O Que Não É Mais Canônico
 
-- o projeto não depende mais de Python
-- o deploy principal pode ser feito integralmente com Node.js
-- a interface web, a API e os utilitários locais estão concentrados no stack atual
+- Backend Python/Flask.
+- Dependências Python para execução principal.
+- Scripts antigos de migração como fonte de verdade.
+
+## Onde Consultar a Fonte de Verdade
+
+- [Manual do Projeto](../../DOCUMENTACAO.md)
+- [Arquitetura](ARCHITECTURE.md)
+- [Instalação](INSTALLATION.md)
+- [Referência da API](API_REFERENCE.md)
+
+## Implicação Para Novas Mudanças
+
+Novas features, correções e documentação devem considerar `server/` e `react-app/` como base. Se algum documento ou comentário mencionar Flask/Python como runtime atual, trate como informação desatualizada.

@@ -115,7 +115,7 @@ const faqGeneral = [
   {
     question: 'Onde encontro o arquivo QuadroHorarioAluno.json?',
     answer:
-      'O arquivo é gerado pelo portal acadêmico do CMMG. Acesse o portal, vá até a seção de horários e exporte/salve o arquivo JSON.',
+      'O arquivo é gerado pelo portal acadêmico do CMMG. Você pode baixá-lo manualmente no portal ou usar o login automático da aplicação para buscar os dados sem fazer download prévio.',
   },
   {
     question: 'Preciso criar uma conta para usar?',
@@ -161,7 +161,7 @@ const faqPrivacy = [
   {
     question: 'Meus dados ficam armazenados?',
     answer:
-      'Não. O arquivo é enviado para a API apenas para processamento. Nenhum dado é salvo no servidor após a resposta.',
+      'Não. Arquivos, cookies e credenciais TOTVS são usados apenas durante a requisição necessária para analisar o horário. A aplicação não persiste esses dados.',
   },
   {
     question: 'O que acontece se o arquivo estiver com erro?',
@@ -171,6 +171,6 @@ const faqPrivacy = [
   {
     question: 'A ferramenta acessa minha conta do portal?',
     answer:
-      'Não. A ferramenta apenas processa o arquivo JSON que você já exportou do portal. Nenhuma credencial é solicitada ou acessada.',
+      'Somente se você escolher o fluxo de login automático. Nesse caso, suas credenciais são enviadas ao backend para autenticar no TOTVS e buscar o horário, sem armazenamento. Se preferir, use cookie manual ou upload do JSON.',
   },
 ];

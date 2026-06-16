@@ -1,18 +1,50 @@
 # Referência da API
 
-Base URL local do backend: `http://localhost:5000/api`
+Base local: `http://localhost:5000/api`
 
-Em produção, a expectativa é servir a API no mesmo domínio da SPA, por exemplo `https://scalpel.com.br/api`.
+Base em produção: `https://calendar.scalpel.com.br/api`
 
-## Autenticação
+## Convenções
 
-Os endpoints locais não exigem autenticação própria da aplicação. Os fluxos TOTVS dependem de credenciais do portal ou de um cookie de sessão válido.
+Respostas de sucesso:
 
-## Endpoints
+```json
+{
+  "success": true,
+  "data": {}
+}
+```
 
-### `GET /api/health`
+Respostas de erro:
 
-Verifica disponibilidade da API.
+```json
+{
+  "success": false,
+  "error": "Mensagem legível para o usuário"
+}
+```
+
+Os endpoints da aplicação não exigem autenticação própria. Os fluxos TOTVS dependem de credenciais do Portal do Aluno ou de um cookie de sessão válido.
+
+## Segurança Aplicada pela API
+
+- Rate limit por rota.
+- Limite de upload configurável por `MAX_FILE_SIZE_MB`.
+- Redação de `cookie`, `authorization`, `password` e `totvs_cookie` nos logs.
+- Headers básicos: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy` e `X-DNS-Prefetch-Control`.
+- CORS liberado em produção apenas via `CORS_ORIGINS`.
+
+## `GET /api/health`
+
+Verifica se a API está disponível.
+
+Rate limit: `60` requisições por minuto.
+
+Exemplo:
+
+```bash
+curl http://localhost:5000/api/health
+```
 
 Resposta `200`:
 
@@ -21,18 +53,23 @@ Resposta `200`:
   "status": "up",
   "message": "API funcionando",
   "port": 5000,
-  "timestamp": "2026-03-17T14:32:28.691Z"
+  "timestamp": "2026-06-16T14:32:28.691Z"
 }
 ```
 
----
+## `POST /api/analyze`
 
-### `POST /api/analyze`
+Analisa um arquivo `QuadroHorarioAluno.json` enviado por upload.
 
-Analisa um arquivo de horário acadêmico enviado em `multipart/form-data`.
+Content type: `multipart/form-data`
 
-- Campo obrigatório: `file` (`.json`)
-- Limite de taxa: `10 por minuto`
+Campo obrigatório:
+
+| Campo | Tipo | Descrição |
+| --- | --- | --- |
+| `file` | arquivo `.json` | Payload do TOTVS com `data.SHorarioAluno`. |
+
+Rate limit: `10` requisições por minuto.
 
 Exemplo:
 
@@ -49,35 +86,57 @@ Resposta `200`:
   "success": true,
   "data": {
     "statistics": {
-      "total_entries": 677,
-      "valid_entries": 670,
-      "invalid_entries": 7
+      "total_entries": 120,
+      "valid_entries": 118,
+      "invalid_entries": 2
     },
-    "subjects": {},
-    "time_slots": {},
-    "locations": {},
-    "days_of_week": {},
-    "monthly_distribution": {}
+    "subjects": {
+      "Anatomia": 18
+    },
+    "time_slots": {
+      "08:00:00 - 10:00:00": 12
+    },
+    "locations": {
+      "Campus": 42
+    },
+    "days_of_week": {
+      "Segunda": 20,
+      "Terça": 20
+    },
+    "monthly_distribution": {
+      "2026-03": 30
+    }
   }
 }
 ```
 
 Erros comuns:
 
-- `400`: arquivo ausente, extensão inválida ou JSON inválido
-- `413`: arquivo acima do tamanho máximo
-- `429`: limite de taxa excedido
-- `500`: erro interno
+| Status | Quando ocorre |
+| --- | --- |
+| `400` | arquivo ausente, sem nome, extensão diferente de `.json` ou JSON inválido |
+| `413` | arquivo maior que `MAX_FILE_SIZE_MB` |
+| `422` | estrutura do JSON não contém dados processáveis |
+| `429` | limite de taxa excedido |
+| `500` | erro inesperado |
 
----
+## `POST /api/extract-analyze`
 
-### `POST /api/extract-analyze`
+Consulta o `QuadroHorarioAluno` no TOTVS usando cookie de sessão e devolve análise mais dados brutos.
 
-Busca o `QuadroHorarioAluno` no TOTVS usando um cookie de sessão já autenticado e devolve os dados brutos mais a análise consolidada.
+Content type: `application/json`
 
-- Body JSON opcional: `{"totvs_cookie":"ASP.NET_SessionId=...; .ASPXAUTH=..."}`
-- Se `totvs_cookie` não for enviado, a API tenta `TOTVS_COOKIE` no ambiente
-- Limite de taxa: `5 por minuto`
+Body:
+
+```json
+{
+  "totvs_cookie": "ASP.NET_SessionId=...; .ASPXAUTH=..."
+}
+```
+
+`totvs_cookie` é opcional no body se `TOTVS_COOKIE` estiver configurado no backend.
+
+Rate limit: `5` requisições por minuto.
 
 Exemplo:
 
@@ -96,10 +155,15 @@ Resposta `200`:
   "data": {
     "analysis": {
       "statistics": {
-        "total_entries": 677,
-        "valid_entries": 670,
-        "invalid_entries": 7
-      }
+        "total_entries": 120,
+        "valid_entries": 118,
+        "invalid_entries": 2
+      },
+      "subjects": {},
+      "time_slots": {},
+      "locations": {},
+      "days_of_week": {},
+      "monthly_distribution": {}
     },
     "schedule_data": {
       "data": {
@@ -112,18 +176,40 @@ Resposta `200`:
 
 Erros comuns:
 
-- `400`: cookie ausente
-- `401`: sessão TOTVS inválida ou expirada
-- `502`: falha de conexão ou resposta inválida do TOTVS
+| Status | Quando ocorre |
+| --- | --- |
+| `400` | body inválido ou cookie ausente |
+| `401` | cookie expirado ou não autorizado no TOTVS |
+| `422` | TOTVS respondeu payload sem estrutura esperada |
+| `429` | limite de taxa excedido |
+| `502` | falha de conexão, HTTP inesperado ou JSON inválido do TOTVS |
+| `500` | erro inesperado |
 
----
+## `POST /api/totvs-login`
 
-### `POST /api/totvs-login`
+Recebe credenciais do Portal do Aluno, autentica no TOTVS, seleciona contexto acadêmico, consulta o horário e devolve análise mais dados brutos.
 
-Recebe credenciais do Portal do Aluno, faz login no TOTVS, busca o horário e devolve análise mais dados brutos.
+Content type: `application/json`
 
-- Body JSON obrigatório: `{"user":"...","password":"..."}`
-- Limite de taxa: `5 por minuto`
+Body:
+
+```json
+{
+  "user": "seu-usuario",
+  "password": "sua-senha",
+  "alias": "CorporeRM"
+}
+```
+
+Campos:
+
+| Campo | Obrigatório | Descrição |
+| --- | --- | --- |
+| `user` | sim | Usuário, RA ou login do Portal do Aluno. |
+| `password` | sim | Senha do Portal do Aluno. |
+| `alias` | não | Alias TOTVS desejado; se ausente, usa `TOTVS_DEFAULT_ALIAS`. |
+
+Rate limit: `5` requisições por minuto.
 
 Exemplo:
 
@@ -134,54 +220,53 @@ curl -X POST \
   http://localhost:5000/api/totvs-login
 ```
 
+Resposta `200`: mesmo formato de `/api/extract-analyze`.
+
 Erros comuns:
 
-- `400`: usuário ou senha ausentes
-- `401`: credenciais inválidas
-- `502`: falha ao consultar TOTVS
+| Status | Quando ocorre |
+| --- | --- |
+| `400` | usuário ou senha ausentes, body inválido ou contexto inválido |
+| `401` | credenciais inválidas ou não autorizadas |
+| `422` | payload TOTVS sem estrutura esperada |
+| `429` | limite de taxa excedido |
+| `502` | falha de conexão, HTTP inesperado ou JSON inválido do TOTVS |
+| `500` | erro inesperado |
 
----
-
-## Exportação
-
-Na arquitetura Node atual, a exportação CSV e ICS da interface é client-side e não passa pela API.
-
-Arquivos relevantes:
-
-- `react-app/src/utils/exportUtils.ts`
-- `react-app/src/components/results/ExportButtons.tsx`
-
-Observação:
-
-- o backend também oferece CLI para exportação via `npm run schedule:export -- --input ...`
-
-## Formato esperado do JSON
+## Formato de Entrada Esperado
 
 ```json
 {
   "data": {
     "SHorarioAluno": [
       {
-        "NOME": "Matemática",
-        "DATAINICIAL": "2025-03-10T00:00:00",
-        "DATAFINAL": "2025-03-10T00:00:00",
+        "NOME": "Anatomia",
+        "DATAINICIAL": "2026-03-10T00:00:00",
+        "DATAFINAL": "2026-03-10T00:00:00",
         "HORAINICIAL": "08:00:00",
         "HORAFINAL": "10:00:00",
+        "DIASEMANA": "2",
         "PREDIO": "Campus",
         "BLOCO": "A",
         "SALA": "101",
-        "CODTURMA": "MAT01",
-        "DIASEMANA": "1"
+        "CODTURMA": "MED01",
+        "CODSUBTURMA": "A",
+        "NOMEREDUZIDO": "ANA",
+        "URLAULAONLINE": "https://exemplo.invalid/aula"
       }
     ]
   }
 }
 ```
 
-## Boas práticas de integração
+## Integração Recomendada
 
-- valide o JSON antes do envio
-- trate `400`, `401`, `413`, `429`, `500` e `502`
-- use timeout de rede no cliente
-- não persista credenciais TOTVS desnecessariamente
-- no frontend web, prefira sempre chamadas relativas como `fetch('/api/...')`
+- Use chamadas relativas (`/api/...`) quando o frontend estiver no mesmo domínio da API.
+- Trate explicitamente `400`, `401`, `413`, `422`, `429`, `500` e `502`.
+- Não persista senha ou cookie TOTVS no cliente.
+- Use `AbortController` ou timeout no cliente para evitar requisições penduradas.
+- Mostre as mensagens de `error` retornadas pela API; elas já são pensadas para usuário final.
+
+## Exportação
+
+A API HTTP não possui endpoint de exportação. Na interface web, CSV e ICS são gerados no navegador por `react-app/src/utils/exportUtils.ts`. Para exportação no terminal, use a CLI documentada em [CLI.md](CLI.md).
