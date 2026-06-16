@@ -24,6 +24,19 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.mypy_cache/
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pyre/
+.pytype/
+.pyright/
 
 # Documentation artifacts
 *.md.bak
@@ -54,3 +67,6 @@ tmp/
 .dev.vars*
 !.dev.vars.example
 !.env.example
+
+# Claude
+.claude/

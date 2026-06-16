@@ -1,6 +1,5 @@
 # ── Stage 1: build ───────────────────────────────────────────────────────────
-FROM node:22-alpine AS builder
-FROM node:22.12-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
@@ -18,8 +17,7 @@ COPY server/ server/
 RUN npm run build
 
 # ── Stage 2: runtime ─────────────────────────────────────────────────────────
-FROM node:22-alpine AS runner
-FROM node:22.12-alpine AS runner
+FROM node:24-alpine AS runner
 
 WORKDIR /app
 
@@ -33,13 +31,11 @@ COPY --from=builder /app/react-app/dist/ react-app/dist/
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
+ENV PORT=8080
+
 # Ajusta permissões e roda como usuário não-root
 RUN chown -R node:node /app
 USER node
-
-ENV NODE_ENV=production
-ENV HOST=0.0.0.0
-ENV PORT=8080
 
 EXPOSE 8080
 
