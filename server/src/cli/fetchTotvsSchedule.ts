@@ -1,22 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { paths, config } from "../config.js";
+import { config } from "../config.js";
 import { fetchTotvsScheduleData } from "../services/totvsClient.js";
-
-function parseFlag(flag: string): string | undefined {
-  const index = process.argv.indexOf(flag);
-  return index >= 0 ? process.argv[index + 1] : undefined;
-}
-
-function resolveFromProjectRoot(filePath: string): string {
-  return path.isAbsolute(filePath)
-    ? filePath
-    : path.resolve(paths.projectRoot, filePath);
-}
+import { parseFlag, resolveWithinProjectRoot } from "./cliUtils.js";
 
 async function main() {
   const cookie = parseFlag("--cookie") ?? config.totvsCookie;
-  const outputPath = resolveFromProjectRoot(
+  const outputPath = resolveWithinProjectRoot(
     parseFlag("--output") ??
       path.join("data", "QuadroHorarioAluno.json"),
   );
