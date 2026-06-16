@@ -176,8 +176,7 @@ export const exportToICS = (
     const location = buildLocationString(entry);
     const description = buildDescriptionString(entry);
 
-    // Generate unique ID for each event
-    const uid = crypto.randomUUID?.() || Math.random().toString(36).slice(2);
+    const uid = crypto.randomUUID();
 
     // Create timestamp for DTSTAMP
     const now = new Date();
