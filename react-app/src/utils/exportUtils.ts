@@ -23,6 +23,19 @@ const pad = (value: unknown): string => {
 };
 
 /**
+ * Checks that the date (after stripping the time suffix) is `YYYY-MM-DD` and is
+ * a real calendar day. `Date.parse` overflows impossible days (2025-02-30 becomes
+ * 2025-03-02), so the round-trip guards against silently shifted events.
+ */
+const isValidScheduleDate = (dateStr: string): boolean => {
+  const clean = (dateStr || "").replace("T00:00:00", "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(clean)) return false;
+  const timestamp = Date.parse(`${clean}T00:00:00Z`);
+  if (!Number.isFinite(timestamp)) return false;
+  return new Date(timestamp).toISOString().startsWith(clean);
+};
+
+/**
  * Formats date from ISO string (YYYY-MM-DD) to MM/DD/YYYY for Google Calendar.
  * Parses manually to avoid timezone shifts from new Date().
  */
@@ -57,7 +70,7 @@ const escapeICSText = (text: string): string => {
     .replaceAll("\\", "\\\\")
     .replaceAll(",", "\\,")
     .replaceAll(";", "\\;")
-    .replaceAll("\n", "\\n");
+    .replaceAll(/\r\n|\r|\n/g, "\\n");
 };
 
 /**
@@ -111,11 +124,17 @@ export const exportToCSV = (
 
   for (const entry of scheduleEntries) {
     if (!entry?.NOME || !entry?.DATAINICIAL) continue;
+    if (!isValidScheduleDate(entry.DATAINICIAL)) continue;
 
     const subject = pad(entry.NOME);
     const startDate = pad((entry.DATAINICIAL || "").replace("T00:00:00", ""));
+    const rawEndDate = entry.DATAFINAL || entry.DATAINICIAL || "";
+    // An invalid DATAFINAL would leak raw into the CSV; fall back to the start date.
     const endDate = pad(
-      (entry.DATAFINAL || entry.DATAINICIAL || "").replace("T00:00:00", ""),
+      (isValidScheduleDate(rawEndDate) ? rawEndDate : entry.DATAINICIAL).replace(
+        "T00:00:00",
+        "",
+      ),
     );
     const startTime = pad(entry.HORAINICIAL || "");
     const endTime = pad(entry.HORAFINAL || "");
@@ -168,12 +187,14 @@ export const exportToICS = (
     ) {
       continue;
     }
+    if (!isValidScheduleDate(entry.DATAINICIAL)) continue;
 
     const startDate = (entry.DATAINICIAL || "").replace("T00:00:00", "");
-    const endDate = (entry.DATAFINAL || entry.DATAINICIAL || "").replace(
-      "T00:00:00",
-      "",
-    );
+    const rawEndDate = entry.DATAFINAL || entry.DATAINICIAL || "";
+    // An invalid DATAFINAL would produce an empty or garbage DTEND.
+    const endDate = (
+      isValidScheduleDate(rawEndDate) ? rawEndDate : entry.DATAINICIAL
+    ).replace("T00:00:00", "");
     const location = buildLocationString(entry);
     const description = buildDescriptionString(entry);
 
@@ -187,6 +208,10 @@ export const exportToICS = (
   }
 
   ics += "END:VCALENDAR\n";
+
+  // RFC 5545 requires CRLF line breaks. Values already went through escapeICSText,
+  // so no raw CR/LF survives in the content and the global swap is safe.
+  ics = ics.replaceAll("\n", "\r\n");
 
   const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
   downloadBlob(blob, filename);
