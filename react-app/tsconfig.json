@@ -21,24 +21,22 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "ignoreDeprecations": "6.0",
-    /* Path mapping */
-    "baseUrl": ".",
+    /* Path mapping (resolved relative to this file; baseUrl removed in TS 7) */
     "paths": {
       "@/*": [
-        "src/*"
+        "./src/*"
       ],
       "@/components/*": [
-        "src/components/*"
+        "./src/components/*"
       ],
       "@/hooks/*": [
-        "src/hooks/*"
+        "./src/hooks/*"
       ],
       "@/types/*": [
-        "src/types/*"
+        "./src/types/*"
       ],
       "@/utils/*": [
-        "src/utils/*"
+        "./src/utils/*"
       ]
     }
   },

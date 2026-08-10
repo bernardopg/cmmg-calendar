@@ -31,7 +31,12 @@ function isValidScheduleDate(dateStr: string): boolean {
     return false;
   }
   const timestamp = Date.parse(`${clean}T00:00:00Z`);
-  return Number.isFinite(timestamp);
+  if (!Number.isFinite(timestamp)) {
+    return false;
+  }
+  // Date.parse aceita dias fora do mês e transborda (2025-02-30 vira 2025-03-02),
+  // então confirma que a data sobreviveu ao round-trip sem ser normalizada.
+  return new Date(timestamp).toISOString().startsWith(clean);
 }
 
 function formatDateForGoogle(dateStr: string): string {
@@ -70,7 +75,7 @@ function escapeIcsText(text: string): string {
     .replaceAll("\\", "\\\\")
     .replaceAll(",", "\\,")
     .replaceAll(";", "\\;")
-    .replaceAll("\n", "\\n");
+    .replaceAll(/\r\n|\r|\n/g, "\\n");
 }
 
 export function buildLocationString(entry: ScheduleEntry): string {
@@ -133,10 +138,11 @@ export function generateCsv(entries: ScheduleEntry[]): string {
     }
 
     const startDate = pad(entry.DATAINICIAL).replace("T00:00:00", "");
-    const endDate = pad(entry.DATAFINAL || entry.DATAINICIAL).replace(
-      "T00:00:00",
-      "",
-    );
+    const rawEndDate = pad(entry.DATAFINAL || entry.DATAINICIAL);
+    // DATAFINAL inválida vazaria crua para o CSV; cai para DATAINICIAL.
+    const endDate = (
+      isValidScheduleDate(rawEndDate) ? rawEndDate : startDate
+    ).replace("T00:00:00", "");
 
     rows.push([
       pad(entry.NOME),
@@ -181,10 +187,11 @@ export function generateIcs(entries: ScheduleEntry[]): string {
     }
 
     const startDate = String(entry.DATAINICIAL).replace("T00:00:00", "");
-    const endDate = String(entry.DATAFINAL || entry.DATAINICIAL).replace(
-      "T00:00:00",
-      "",
-    );
+    const rawEndDate = String(entry.DATAFINAL || entry.DATAINICIAL);
+    // DATAFINAL inválida geraria um DTEND vazio ou lixo; cai para DATAINICIAL.
+    const endDate = (
+      isValidScheduleDate(rawEndDate) ? rawEndDate : startDate
+    ).replace("T00:00:00", "");
     const uid = crypto.randomUUID();
 
     ics +=
@@ -202,7 +209,9 @@ export function generateIcs(entries: ScheduleEntry[]): string {
   }
 
   ics += ICS_FOOTER;
-  return ics;
+  // RFC 5545 exige CRLF entre linhas. Os valores já passaram por escapeIcsText,
+  // então nenhum CR/LF cru sobrou no conteúdo e a troca global é segura.
+  return ics.replaceAll("\n", "\r\n");
 }
 
 export function exportScheduleFromPayload(payload: unknown): {

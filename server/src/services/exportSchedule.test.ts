@@ -67,7 +67,7 @@ test("export ignora entries com data inválida no ICS e CSV", () => {
   assert.doesNotMatch(exported.ics, /SUMMARY:DataLixo/);
   assert.doesNotMatch(exported.csv, /DataLixo/);
   // Sem DTSTART vazio que corromperia o ICS.
-  assert.doesNotMatch(exported.ics, /DTSTART:\n/);
+  assert.doesNotMatch(exported.ics, /DTSTART:\r?\n/);
   // A entry válida permanece.
   assert.match(exported.ics, /SUMMARY:Válida/);
 });
@@ -88,6 +88,70 @@ test("ICS escapa vírgulas e ponto-e-vírgula em campos de texto", () => {
   };
   const exported = exportScheduleFromPayload(payload);
   assert.match(exported.ics, /SUMMARY:Aula\\, com vírgula\\; e ponto/);
+});
+
+test("ICS usa CRLF entre linhas e não deixa CR solto", () => {
+  const payload = {
+    data: {
+      SHorarioAluno: [
+        {
+          NOME: "Aula\r\ncom quebra\rsolta",
+          DATAINICIAL: "2025-05-05T00:00:00",
+          DATAFINAL: "2025-05-05T00:00:00",
+          HORAINICIAL: "08:00:00",
+          HORAFINAL: "10:00:00",
+        },
+      ],
+    },
+  };
+  const exported = exportScheduleFromPayload(payload);
+
+  // RFC 5545: toda quebra de linha é CRLF, nenhum LF ou CR isolado.
+  assert.doesNotMatch(exported.ics, /(?<!\r)\n/);
+  assert.doesNotMatch(exported.ics, /\r(?!\n)/);
+  // Quebras vindas do conteúdo viram \n literal, não quebram o arquivo.
+  assert.match(exported.ics, /SUMMARY:Aula\\ncom quebra\\nsolta\r\n/);
+});
+
+test("data impossível é rejeitada em vez de transbordar para o mês seguinte", () => {
+  const payload = {
+    data: {
+      SHorarioAluno: [
+        {
+          NOME: "TrintaDeFevereiro",
+          DATAINICIAL: "2025-02-30T00:00:00",
+          DATAFINAL: "2025-02-30T00:00:00",
+          HORAINICIAL: "08:00:00",
+          HORAFINAL: "10:00:00",
+        },
+      ],
+    },
+  };
+  const exported = exportScheduleFromPayload(payload);
+
+  assert.doesNotMatch(exported.ics, /SUMMARY:TrintaDeFevereiro/);
+  assert.doesNotMatch(exported.csv, /TrintaDeFevereiro/);
+});
+
+test("DATAFINAL inválida cai para DATAINICIAL em vez de vazar", () => {
+  const payload = {
+    data: {
+      SHorarioAluno: [
+        {
+          NOME: "FimQuebrado",
+          DATAINICIAL: "2025-04-01T00:00:00",
+          DATAFINAL: "lixo-total",
+          HORAINICIAL: "08:00:00",
+          HORAFINAL: "10:00:00",
+        },
+      ],
+    },
+  };
+  const exported = exportScheduleFromPayload(payload);
+
+  assert.match(exported.ics, /DTEND:20250401T100000\r\n/);
+  assert.doesNotMatch(exported.csv, /lixo-total/);
+  assert.match(exported.csv, /"04\/01\/2025","10:00:00"/);
 });
 
 test("CSV escapa aspas duplas em campos", () => {
