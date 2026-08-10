@@ -68,5 +68,6 @@ tmp/
 !.dev.vars.example
 !.env.example
 
-# Claude
+# Local agent settings
 .claude/
+.serena/
