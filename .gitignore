@@ -69,5 +69,7 @@ tmp/
 !.env.example
 
 # Local agent settings
-.claude/
+.claude/*
+!.claude/settings.json
 .serena/
+.headroom/

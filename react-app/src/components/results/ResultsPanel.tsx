@@ -1,6 +1,7 @@
+import { Suspense, lazy } from 'react';
+
 import { BarChart } from '@/components/charts/BarChart';
 import { ExportButtons } from '@/components/results/ExportButtons';
-import { SchedulePreview } from '@/components/results/SchedulePreview';
 import { StatisticsCard } from '@/components/results/StatisticsCard';
 import {
   BookOpenText,
@@ -12,6 +13,17 @@ import {
   LayoutPanelTop,
 } from 'lucide-react';
 import type { AnalysisResult, ScheduleEntry } from '@/types';
+
+const SchedulePreview = lazy(async () => ({
+  default: (await import('@/components/results/SchedulePreview')).SchedulePreview,
+}));
+
+const PreviewFallback = () => (
+  <div className="route-fallback" role="status" aria-live="polite">
+    <span className="route-fallback__spinner" aria-hidden="true" />
+    <span>Carregando calendário...</span>
+  </div>
+);
 
 interface ResultsPanelProps {
   result: AnalysisResult;
@@ -44,7 +56,9 @@ export const ResultsPanel = ({
           <ChevronDown size={18} className="results-foldable__chevron" aria-hidden="true" />
         </summary>
         <div className="results-foldable__content">
-          <SchedulePreview entries={entries} />
+          <Suspense fallback={<PreviewFallback />}>
+            <SchedulePreview entries={entries} />
+          </Suspense>
         </div>
       </details>
 

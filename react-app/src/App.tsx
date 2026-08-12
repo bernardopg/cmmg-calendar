@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import { useApiHealth, useTheme } from '@/hooks';
@@ -8,10 +8,26 @@ import { AppFooter } from '@/components/layout/AppFooter';
 import { HamburgerSidebar } from '@/components/layout/HamburgerSidebar';
 
 import { LandingPage } from '@/pages/LandingPage';
-import { HomePage } from '@/pages/HomePage';
-import { GuidePage } from '@/pages/GuidePage';
-import { FaqPage } from '@/pages/FaqPage';
-import { AboutPage } from '@/pages/AboutPage';
+
+const HomePage = lazy(async () => ({
+  default: (await import('@/pages/HomePage')).HomePage,
+}));
+const GuidePage = lazy(async () => ({
+  default: (await import('@/pages/GuidePage')).GuidePage,
+}));
+const FaqPage = lazy(async () => ({
+  default: (await import('@/pages/FaqPage')).FaqPage,
+}));
+const AboutPage = lazy(async () => ({
+  default: (await import('@/pages/AboutPage')).AboutPage,
+}));
+
+const RouteFallback = () => (
+  <div className="route-fallback" role="status" aria-live="polite">
+    <span className="route-fallback__spinner" aria-hidden="true" />
+    <span>Carregando...</span>
+  </div>
+);
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -58,13 +74,15 @@ function App() {
             onClose={closeSidebar}
           />
 
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/gerador" element={<HomePage />} />
-            <Route path="/guia" element={<GuidePage />} />
-            <Route path="/faq" element={<FaqPage />} />
-            <Route path="/sobre" element={<AboutPage />} />
-          </Routes>
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/gerador" element={<HomePage />} />
+              <Route path="/guia" element={<GuidePage />} />
+              <Route path="/faq" element={<FaqPage />} />
+              <Route path="/sobre" element={<AboutPage />} />
+            </Routes>
+          </Suspense>
 
           <AppFooter />
         </div>
