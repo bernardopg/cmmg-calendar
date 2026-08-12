@@ -671,6 +671,32 @@
   animation: spin 0.8s linear infinite;
 }
 
+.route-fallback {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: center;
+  min-height: 12rem;
+  padding: var(--space-6) var(--space-4);
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+}
+
+.route-fallback__spinner {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid color-mix(in srgb, currentcolor 30%, transparent);
+  border-top-color: currentcolor;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-fallback__spinner {
+    animation-duration: 2.4s;
+  }
+}
+
 .alert-error {
   display: flex;
   gap: var(--space-3);
