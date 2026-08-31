@@ -28,7 +28,7 @@
     "preview": "wrangler dev"
   },
   "devDependencies": {
-    "wrangler": "^4.125.0"
+    "wrangler": "^4.127.0"
   },
   "overrides": {
     "undici": "^7.24.4",
