@@ -4,8 +4,9 @@ Obrigado por contribuir com o CMMG Calendar. Este projeto prioriza mudanças peq
 
 ## Stack Canônica
 
-- Backend: `server/`, Fastify + TypeScript.
-- Frontend: `react-app/`, React + Vite + TypeScript.
+- Frontend: `react-app/`, React + Vite + TypeScript. É onde vive a análise.
+- Backend: `deploy/api/`, três arquivos PHP que só fazem o salto autenticado ao
+  TOTVS. Não existe backend Node — a hospedagem não roda processo persistente.
 - Node: `^22.12.0` ou `>=24.0.0`.
 - npm: `>=10`.
 
@@ -34,18 +35,12 @@ npm install
 
 ## Desenvolvimento
 
-Full stack:
-
 ```bash
 npm run dev
 ```
 
-Separado:
-
-```bash
-npm run dev:server
-npm run dev:client
-```
+Sobe o Vite em `:5173`. As chamadas a `/api` vão para produção; sobrescreva com
+`VITE_API_PROXY_TARGET`.
 
 ## Verificações Antes do PR
 
@@ -66,11 +61,13 @@ npm run build
 Checks mais específicos:
 
 ```bash
-npm run test --prefix server
-npm run build --prefix server
-npm run lint --prefix react-app
+npm run lint  --prefix react-app
+npm run test  --prefix react-app
 npm run build --prefix react-app
 ```
+
+Mudou algo em `deploy/api/`? Rode `php -l` em cada arquivo alterado e descreva
+no PR como testou contra o portal.
 
 ## Padrões de Código
 

@@ -5,6 +5,7 @@ import type {
   ApiResponse,
   ScheduleData,
 } from "@/types";
+import { analyzeScheduleDataJson } from "@/lib/analyzeSchedule";
 import { getErrorMessage } from "@/utils/errorUtils";
 
 const isAbortError = (err: unknown): boolean =>
@@ -32,55 +33,27 @@ export const useScheduleAnalysis = (): UseScheduleAnalysisReturn => {
     };
   }, []);
 
-  const analyzeSchedule = useCallback(
-    async (file: File) => {
-      if (!file) {
-        setError("Por favor, selecione um arquivo JSON.");
-        return false;
-      }
+  // A análise roda no browser: não há requisição para cancelar aqui.
+  const analyzeSchedule = useCallback(async (file: File) => {
+    if (!file) {
+      setError("Por favor, selecione um arquivo JSON.");
+      return false;
+    }
 
-      const signal = nextSignal();
-      setLoading(true);
-      setError(null);
-      setResult(null);
+    setLoading(true);
+    setError(null);
+    setResult(null);
 
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const response = await fetch("/api/analyze", {
-          method: "POST",
-          body: formData,
-          signal,
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data: ApiResponse<AnalysisResult> = await response.json();
-
-        if (data.success && data.data) {
-          setResult(data.data);
-          return true;
-        } else {
-          setError(data.error || "Erro desconhecido durante a análise");
-          return false;
-        }
-      } catch (err) {
-        if (isAbortError(err)) {
-          return false;
-        }
-        setError(getErrorMessage(err));
-        return false;
-      } finally {
-        if (abortRef.current?.signal === signal) {
-          setLoading(false);
-        }
-      }
-    },
-    [nextSignal],
-  );
+    try {
+      setResult(analyzeScheduleDataJson(JSON.parse(await file.text())));
+      return true;
+    } catch (err) {
+      setError(getErrorMessage(err, "Não foi possível ler o arquivo JSON."));
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const clearResults = useCallback(() => {
     setResult(null);
@@ -88,35 +61,35 @@ export const useScheduleAnalysis = (): UseScheduleAnalysisReturn => {
     setLoading(false);
   }, []);
 
-  const extractAndAnalyze = useCallback(
-    async (totvsCookie?: string) => {
+  // A API PHP só faz o salto autenticado ao TOTVS; a análise é local.
+  const fetchSchedule = useCallback(
+    async (path: string, body: Record<string, unknown>) => {
       const signal = nextSignal();
       setLoading(true);
       setError(null);
       setResult(null);
 
       try {
-        const response = await fetch("/api/extract-analyze", {
+        const response = await fetch(path, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(totvsCookie ? { totvs_cookie: totvsCookie } : {}),
+          body: JSON.stringify(body),
           signal,
         });
 
-        const payload: ApiResponse<{
-          analysis: AnalysisResult;
-          schedule_data: ScheduleData;
-        }> = await response.json();
+        const payload: ApiResponse<{ schedule_data: ScheduleData }> =
+          await response.json();
 
         if (!response.ok || !payload.success || !payload.data) {
           setError(payload.error || `HTTP error! status: ${response.status}`);
           return null;
         }
 
-        setResult(payload.data.analysis);
-        return payload.data.schedule_data;
+        const schedule = payload.data.schedule_data;
+        setResult(analyzeScheduleDataJson(schedule));
+        return schedule;
       } catch (err) {
         if (isAbortError(err)) {
           return null;
@@ -132,48 +105,19 @@ export const useScheduleAnalysis = (): UseScheduleAnalysisReturn => {
     [nextSignal],
   );
 
+  const extractAndAnalyze = useCallback(
+    (totvsCookie?: string) =>
+      fetchSchedule(
+        "/api/extract-analyze.php",
+        totvsCookie ? { totvs_cookie: totvsCookie } : {},
+      ),
+    [fetchSchedule],
+  );
+
   const loginAndExtract = useCallback(
-    async (user: string, password: string) => {
-      const signal = nextSignal();
-      setLoading(true);
-      setError(null);
-      setResult(null);
-
-      try {
-        const response = await fetch("/api/totvs-login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ user, password }),
-          signal,
-        });
-
-        const payload: ApiResponse<{
-          analysis: AnalysisResult;
-          schedule_data: ScheduleData;
-        }> = await response.json();
-
-        if (!response.ok || !payload.success || !payload.data) {
-          setError(payload.error || `HTTP error! status: ${response.status}`);
-          return null;
-        }
-
-        setResult(payload.data.analysis);
-        return payload.data.schedule_data;
-      } catch (err) {
-        if (isAbortError(err)) {
-          return null;
-        }
-        setError(getErrorMessage(err));
-        return null;
-      } finally {
-        if (abortRef.current?.signal === signal) {
-          setLoading(false);
-        }
-      }
-    },
-    [nextSignal],
+    (user: string, password: string) =>
+      fetchSchedule("/api/totvs-login.php", { user, password }),
+    [fetchSchedule],
   );
 
   return {

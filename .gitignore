@@ -52,7 +52,6 @@ yarn-debug.log*
 yarn-error.log*
 .npm
 .yarn-integrity
-server/dist/
 
 # Environment variables
 .env
@@ -62,10 +61,6 @@ server/dist/
 .env.production.local
 tmp/
 
-# wrangler files
-.wrangler
-.dev.vars*
-!.dev.vars.example
 !.env.example
 
 # Local agent settings

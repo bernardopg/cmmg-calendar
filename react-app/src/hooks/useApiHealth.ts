@@ -9,7 +9,7 @@ export const useApiHealth = (checkInterval: number = 10000): UseApiHealthReturn 
 
     const checkHealth = async () => {
       try {
-        const response = await fetch('/api/health');
+        const response = await fetch('/api/health.php');
         const data = await response.json();
 
         if (!active) return;

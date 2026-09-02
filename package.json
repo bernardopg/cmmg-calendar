@@ -1,39 +1,24 @@
 {
   "name": "cmmg-calendar",
   "private": true,
-  "version": "0.2.0",
-  "description": "Build and run the React frontend plus Fastify backend from one Node app.",
+  "version": "0.3.0",
+  "description": "SPA que converte o quadro de horários do TOTVS para Google Calendar e Thunderbird. Hospedado em calendar.scalpel.com.br.",
   "engines": {
     "node": "^22.12.0 || >=24.0.0",
     "npm": ">=10"
   },
-  "dependencies": {
-    "concurrently": "^10.0.5"
-  },
   "scripts": {
-    "dev": "concurrently -k -n server,client -c cyan,magenta \"npm run dev:server\" \"npm run dev:client\"",
-    "install:all": "npm install --prefix react-app && npm install --prefix server",
+    "dev": "npm run dev --prefix react-app",
+    "install:all": "npm install --prefix react-app",
     "postinstall": "npm run install:all",
     "lint": "npm run lint --prefix react-app",
-    "test": "npm run test --prefix server",
-    "build": "npm run build --prefix react-app && npm run build --prefix server",
-    "check": "npm run lint && npm run test && npm run build",
-    "start": "npm run start --prefix server",
-    "dev:client": "npm run dev --prefix react-app",
-    "dev:server": "npm run dev --prefix server",
-    "schedule:analyze": "npm run cli:analyze --prefix server --",
-    "schedule:export": "npm run cli:export --prefix server --",
-    "totvs:fetch": "npm run cli:fetch --prefix server --",
-    "deploy": "wrangler deploy",
-    "preview": "wrangler dev"
-  },
-  "devDependencies": {
-    "wrangler": "^4.127.0"
+    "test": "npm run test --prefix react-app",
+    "build": "npm run build --prefix react-app",
+    "check": "npm run lint && npm run test && npm run build"
   },
   "overrides": {
     "undici": "^7.24.4",
     "esbuild": "^0.28.1",
     "ws": "^8.21.0"
-  },
-  "allowScripts": ["concurrently"]
+  }
 }

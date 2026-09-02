@@ -19,6 +19,7 @@ export interface ScheduleEntry {
   DATAFINAL?: string;
   HORAINICIAL: string;
   HORAFINAL: string;
+  DIASEMANA?: string;
   CODTURMA?: string;
   CODSUBTURMA?: string;
   NOMEREDUZIDO?: string;

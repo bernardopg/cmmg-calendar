@@ -1,9 +1,24 @@
-import {
-  ApiValidationError,
-  type AnalysisResult,
-  type ScheduleEntry,
-} from "../types.js";
-import { extractScheduleEntries } from "./scheduleEntries.js";
+import type { AnalysisResult, ScheduleData, ScheduleEntry } from "@/types";
+
+export function extractScheduleEntries(payload: unknown): ScheduleEntry[] {
+  if (!payload || typeof payload !== "object" || !("data" in payload)) {
+    throw new Error("Estrutura de dados inválida: chave 'data' ausente");
+  }
+
+  const data = (payload as ScheduleData).data;
+  if (!data || typeof data !== "object" || !("SHorarioAluno" in data)) {
+    throw new Error("Estrutura de dados inválida: chave 'SHorarioAluno' ausente");
+  }
+
+  const rawEntries = data.SHorarioAluno;
+  if (!Array.isArray(rawEntries)) {
+    throw new Error("Estrutura de dados inválida: 'SHorarioAluno' deve ser uma lista");
+  }
+
+  return rawEntries.filter(
+    (entry): entry is ScheduleEntry => Boolean(entry) && typeof entry === "object",
+  );
+}
 
 const DAYS_MAP: Record<string, string> = {
   "0": "Domingo",
@@ -84,8 +99,7 @@ export function analyzeScheduleDataJson(payload: unknown): AnalysisResult {
       incrementCounter(timeSlots, `${startTime} - ${endTime}`);
     }
 
-    const location =
-      typeof entry.PREDIO === "string" ? entry.PREDIO.trim() : "";
+    const location = typeof entry.PREDIO === "string" ? entry.PREDIO.trim() : "";
     if (location) {
       incrementCounter(locations, location);
     }

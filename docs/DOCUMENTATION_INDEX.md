@@ -11,8 +11,8 @@ Use este arquivo como mapa de navegação. A documentação está organizada por
 | Rodar o projeto localmente | [Instalação](guides/INSTALLATION.md) |
 | Usar a aplicação web | [Interface Web](guides/WEB_INTERFACE.md) |
 | Integrar com endpoints HTTP | [Referência da API](guides/API_REFERENCE.md) |
-| Usar comandos no terminal | [CLI](guides/CLI.md) |
 | Entender módulos, fluxos e deploy | [Arquitetura](guides/ARCHITECTURE.md) |
+| Publicar em produção | [Deploy](guides/DEPLOY_HOSTINGER.md) |
 | Corrigir erros comuns | [Solução de Problemas](guides/TROUBLESHOOTING.md) |
 
 ## Guias de Uso Final
@@ -25,8 +25,8 @@ Use este arquivo como mapa de navegação. A documentação está organizada por
 
 - [Instalação](guides/INSTALLATION.md)
 - [Referência da API](guides/API_REFERENCE.md)
-- [CLI](guides/CLI.md)
 - [Arquitetura](guides/ARCHITECTURE.md)
+- [Deploy](guides/DEPLOY_HOSTINGER.md)
 - [Status da Migração](guides/MIGRATION_STATUS.md)
 - [Solução de Problemas](guides/TROUBLESHOOTING.md)
 

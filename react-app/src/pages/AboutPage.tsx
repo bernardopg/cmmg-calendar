@@ -64,10 +64,10 @@ export const AboutPage = () => {
             </div>
             <h3>Backend</h3>
             <ul className="about-tech-list">
-              <li>Fastify + TypeScript</li>
-              <li>Zod validation</li>
+              <li>PHP 8.3 + cURL</li>
+              <li>Salto autenticado ao TOTVS</li>
               <li>Rate limiting</li>
-              <li>Undici + cookie jar TOTVS</li>
+              <li>Sem banco de dados</li>
             </ul>
           </div>
         </div>

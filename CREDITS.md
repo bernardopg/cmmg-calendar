@@ -15,4 +15,7 @@ CMMG Calendar foi criado para facilitar a conversão e análise de horários aca
 
 ## Tecnologias e Ecossistema
 
-O projeto usa ferramentas open source como Node.js, Fastify, React, Vite, TypeScript e bibliotecas do ecossistema npm. Consulte `package.json`, `server/package.json` e `react-app/package.json` para a lista completa de dependências.
+O projeto usa ferramentas open source como Node.js, React, Vite, TypeScript,
+FullCalendar e bibliotecas do ecossistema npm, além de PHP com curl no
+servidor. Consulte `package.json` e `react-app/package.json` para a lista
+completa de dependências.

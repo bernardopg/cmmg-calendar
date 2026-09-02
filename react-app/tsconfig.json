@@ -32,6 +32,9 @@
       "@/hooks/*": [
         "./src/hooks/*"
       ],
+      "@/lib/*": [
+        "./src/lib/*"
+      ],
       "@/types/*": [
         "./src/types/*"
       ],
@@ -42,5 +45,9 @@
   },
   "include": [
     "src"
+  ],
+  "//": "Os testes rodam em node --test (type stripping) e usam APIs de Node; ficam fora do type check do app, que é só browser.",
+  "exclude": [
+    "src/**/*.test.ts"
   ]
 }

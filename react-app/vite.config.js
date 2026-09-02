@@ -14,9 +14,10 @@ export default defineConfig(({ mode }) => {
     10,
   );
   const frontendPort = Number.isNaN(configuredPort) ? 5173 : configuredPort;
+  // Não existe backend local: a API são os .php publicados em produção.
+  // Sobrescreva com VITE_API_PROXY_TARGET para apontar para outro ambiente.
   const apiTarget =
-    env.VITE_API_PROXY_TARGET ??
-    `http://127.0.0.1:${env.SERVER_PORT || env.API_PORT || env.PORT || "5000"}`;
+    env.VITE_API_PROXY_TARGET ?? "https://calendar.scalpel.com.br";
 
   return {
     plugins: [react()],
@@ -28,6 +29,7 @@ export default defineConfig(({ mode }) => {
         ),
         "@/hooks": fileURLToPath(new URL("./src/hooks", import.meta.url)),
         "@/types": fileURLToPath(new URL("./src/types", import.meta.url)),
+        "@/lib": fileURLToPath(new URL("./src/lib", import.meta.url)),
         "@/utils": fileURLToPath(new URL("./src/utils", import.meta.url)),
       },
     },
@@ -38,6 +40,7 @@ export default defineConfig(({ mode }) => {
         "/api": {
           target: apiTarget,
           changeOrigin: true,
+          secure: true,
         },
       },
     },

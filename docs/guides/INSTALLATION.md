@@ -1,6 +1,7 @@
 # Instalação e Ambiente Local
 
-Este guia cobre o ambiente local do CMMG Calendar: instalação, execução, build, variáveis de ambiente e validação básica.
+Este guia cobre o ambiente local do CMMG Calendar: instalação, execução, build,
+variáveis de ambiente e validação básica.
 
 ## Requisitos
 
@@ -25,73 +26,43 @@ cd cmmg-calendar
 npm install
 ```
 
-O `postinstall` da raiz executa `npm install` em `react-app/` e `server/`. Se precisar reinstalar manualmente:
+O `postinstall` da raiz executa `npm install` em `react-app/`. Se precisar
+reinstalar manualmente:
 
 ```bash
 npm run install:all
 ```
 
-## Desenvolvimento Full Stack
+## Desenvolvimento
 
 ```bash
-npm run dev
+npm run dev        # Vite em http://localhost:5173
 ```
 
-Esse comando sobe dois processos em paralelo:
+**Não existe backend local.** A API são três arquivos PHP publicados em
+produção; o Vite encaminha `/api` para lá. Isso significa que os fluxos de
+login e cookie funcionam em desenvolvimento, batendo na API de produção, e o
+fluxo de upload funciona inteiro no navegador, sem rede.
 
-| Processo | Comando interno | URL padrão |
-| --- | --- | --- |
-| Backend | `npm run dev --prefix server` | `http://localhost:5000` |
-| Frontend | `npm run dev --prefix react-app` | `http://localhost:5173` |
-
-Teste a API:
-
-```bash
-curl http://localhost:5000/api/health
-```
-
-Resposta esperada:
-
-```json
-{
-  "status": "up",
-  "message": "API funcionando",
-  "port": 5000,
-  "timestamp": "2026-06-16T14:32:28.691Z"
-}
-```
-
-## Processos Separados
-
-Use dois terminais quando quiser depurar um lado sem reiniciar o outro.
-
-Terminal 1:
-
-```bash
-npm run dev:server
-```
-
-Terminal 2:
-
-```bash
-npm run dev:client
-```
+Para desenvolver a API PHP, edite `deploy/api/` e publique com
+`../../deploy/deploy.sh calendar` (veja [Deploy](DEPLOY_HOSTINGER.md)). Se
+quiser um PHP local, `php -S localhost:8000 -t deploy` serve os endpoints, e
+aí basta apontar `VITE_API_PROXY_TARGET=http://localhost:8000`.
 
 ## Proxy do Frontend
 
-Em desenvolvimento, o frontend chama `/api/...`. O Vite encaminha essas chamadas para:
+Em desenvolvimento, o frontend chama `/api/...`. O Vite encaminha para:
 
 ```text
 VITE_API_PROXY_TARGET
-ou http://127.0.0.1:${SERVER_PORT || API_PORT || PORT || 5000}
+ou https://calendar.scalpel.com.br
 ```
 
 Configurações úteis:
 
 ```bash
-VITE_PORT=5173 npm run dev:client
-SERVER_PORT=5001 npm run dev:client
-VITE_API_PROXY_TARGET=http://127.0.0.1:5001 npm run dev:client
+VITE_PORT=5173 npm run dev
+VITE_API_PROXY_TARGET=http://localhost:8000 npm run dev
 ```
 
 ## Build Local
@@ -100,18 +71,11 @@ VITE_API_PROXY_TARGET=http://127.0.0.1:5001 npm run dev:client
 npm run build
 ```
 
-Saídas geradas:
-
-- `react-app/dist/`
-- `server/dist/`
-
-Para executar o app compilado:
+Saída gerada: `react-app/dist/`. Para servir o build:
 
 ```bash
-npm start
+npm run preview --prefix react-app
 ```
-
-Nesse modo, o Fastify serve a API e a SPA compilada no mesmo processo.
 
 ## Verificações de Qualidade
 
@@ -127,86 +91,37 @@ Ou tudo de uma vez:
 npm run check
 ```
 
+Os testes rodam com `node --test` sobre `react-app/src/lib/*.test.ts`, sem
+nenhum runner instalado. O `tsc --noEmit` do build ignora os arquivos de teste,
+que usam APIs de Node e não fazem parte do bundle do navegador.
+
 ## Variáveis de Ambiente
 
-O backend carrega `.env` na raiz e depois `server/.env`. Valores em `server/.env` têm prioridade.
+Só existem variáveis do frontend, e todas são opcionais:
 
-Exemplo de `.env`:
+| Variável | Padrão | Uso |
+| --- | --- | --- |
+| `VITE_PORT` | `5173` | Porta do servidor de desenvolvimento. |
+| `VITE_HOST` | todas as interfaces | Host do servidor de desenvolvimento. |
+| `VITE_API_PROXY_TARGET` | `https://calendar.scalpel.com.br` | Destino do proxy de `/api`. |
 
-```env
-NODE_ENV=development
-HOST=0.0.0.0
-PORT=5000
-MAX_FILE_SIZE_MB=10
-TOTVS_TIMEOUT_MS=30000
-TOTVS_BASE_URL=https://fundacaoeducacional132827.rm.cloudtotvs.com.br
-TOTVS_DEFAULT_ALIAS=CorporeRM
-```
+As constantes do TOTVS (URLs, timeout, alias padrão) ficam no topo de
+`deploy/api/_lib.php`. Não há `.env` de backend nem configuração de CORS: a SPA
+e a API são servidas pela mesma origem.
 
-Variáveis TOTVS opcionais:
+## Deploy
 
-```env
-TOTVS_COOKIE=
-TOTVS_QUADRO_URL=
-TOTVS_PORTAL_REFERER=
-TOTVS_LOGIN_URL=
-TOTVS_AUTO_LOGIN_URL=
-TOTVS_CONTEXT_URL=
-TOTVS_CONTEXT_SELECTION_URL=
-```
-
-Se essas URLs ficarem vazias, o backend usa os padrões derivados de `TOTVS_BASE_URL`.
-
-Variáveis de CORS:
-
-```env
-CORS_ORIGINS=https://calendar.scalpel.com.br,https://outro-dominio.exemplo
-```
-
-Comportamento:
-
-- Em desenvolvimento sem `CORS_ORIGINS`, o backend reflete a origem para facilitar o uso com Vite.
-- Em produção sem `CORS_ORIGINS`, CORS cross-origin não é habilitado.
-
-## Docker
-
-Build local:
+O app é publicado pelo script do hub Scalpel:
 
 ```bash
-docker build -t cmmg-calendar .
+../../deploy/deploy.sh calendar
 ```
 
-Execução:
-
-```bash
-docker run -p 8080:8080 -e NODE_ENV=production cmmg-calendar
-```
-
-Com variáveis extras:
-
-```bash
-docker run \
-  -p 8080:8080 \
-  -e NODE_ENV=production \
-  -e PORT=8080 \
-  -e CORS_ORIGINS=https://calendar.scalpel.com.br \
-  cmmg-calendar
-```
-
-## Deploy DigitalOcean
-
-O arquivo `.do/app.yaml` define:
-
-- serviço `web`;
-- branch `main`;
-- `deploy_on_push: true`;
-- build via `Dockerfile`;
-- porta HTTP `8080`;
-- variáveis de runtime básicas.
+Detalhes em [Deploy](DEPLOY_HOSTINGER.md).
 
 ## Próximos Passos
 
 - [Interface Web](WEB_INTERFACE.md)
 - [Referência da API](API_REFERENCE.md)
-- [CLI](CLI.md)
+- [Deploy](DEPLOY_HOSTINGER.md)
 - [Solução de Problemas](TROUBLESHOOTING.md)

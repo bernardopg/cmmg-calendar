@@ -1,0 +1,45 @@
+# Docroot de calendar.scalpel.com.br
+Options -Indexes
+DirectoryIndex index.html
+
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "no-referrer"
+  Header always set X-DNS-Prefetch-Control "off"
+</IfModule>
+
+# _lib.php não é endpoint: só é incluído pelos outros arquivos da API.
+<Files "_lib.php">
+  Require all denied
+</Files>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # A API resolve sozinha.
+  RewriteRule ^api/ - [L]
+
+  # Arquivo ou diretório existente é servido direto.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Todo o resto vai para a SPA (react-router).
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Hashes no nome do arquivo: cache longo é seguro.
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+  ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|php)$">
+    Header always set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>

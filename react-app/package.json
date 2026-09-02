@@ -13,6 +13,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
+    "test": "node --test 'src/lib/*.test.ts'",
     "lint": "eslint .",
     "preview": "vite preview"
   },
