@@ -14,10 +14,8 @@ Desenvolvimento local:
 npm run dev
 ```
 
-URLs locais:
-
-- `http://localhost:5173`: SPA React/Vite
-- `http://localhost:5000/api/health`: API Fastify
+URL local: `http://localhost:5173`. Não há backend local — o Vite encaminha
+`/api` para produção.
 
 ## Rotas da Aplicação
 
@@ -38,7 +36,9 @@ URLs locais:
 5. Revise as estatísticas.
 6. Exporte CSV ou ICS.
 
-Privacidade: a senha é enviada ao backend apenas para autenticar no TOTVS durante a requisição. Ela não é armazenada pela aplicação.
+Privacidade: a senha é enviada à API apenas para autenticar no TOTVS durante a
+requisição. Ela não é armazenada em lugar nenhum — nem em log, nem em sessão,
+nem em disco.
 
 ## Fluxo Avançado: Cookie Manual
 
@@ -62,7 +62,9 @@ Use quando você já tiver baixado o arquivo `QuadroHorarioAluno.json`.
 4. Clique em `Analisar horário`.
 5. Exporte CSV ou ICS.
 
-O frontend valida se o JSON possui o formato mínimo `data.SHorarioAluno` antes de usar os dados para exportação.
+O arquivo é lido e analisado no próprio navegador: ele não sobe para servidor
+nenhum. O frontend valida o formato mínimo `data.SHorarioAluno` antes de usar
+os dados.
 
 ## O Que A Análise Mostra
 
@@ -93,11 +95,13 @@ Sintomas:
 - indicador da API aparece offline;
 - chamadas para `/api/...` falham.
 
-Ações:
+O upload de arquivo continua funcionando: ele não depende da API. Só os fluxos
+de login e cookie precisam dela.
+
+Ação:
 
 ```bash
-npm run dev:server
-curl http://localhost:5000/api/health
+curl https://calendar.scalpel.com.br/api/health.php
 ```
 
 ### Arquivo inválido
@@ -126,7 +130,7 @@ Ações:
 - teste login diretamente no Portal do Aluno;
 - tente novamente depois se o portal estiver instável;
 - use cookie manual como alternativa;
-- confira se variáveis `TOTVS_*` foram sobrescritas corretamente.
+- se o portal tiver mudado, confira as constantes no topo de `deploy/api/_lib.php`.
 
 ### Eventos duplicados no calendário
 

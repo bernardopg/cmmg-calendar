@@ -1,32 +1,36 @@
 # Status da Migração
 
-A migração do backend Flask/Python para Node.js foi concluída. Este arquivo permanece como registro histórico para evitar dúvidas sobre qual stack é canônica.
+Registro histórico das mudanças de stack, para não restar dúvida sobre qual é a
+canônica.
+
+| Fase | Backend | Situação |
+| --- | --- | --- |
+| Inicial | Flask/Python | removido |
+| Intermediária | Node.js + Fastify em `server/` | removido em setembro de 2026 |
+| **Atual** | análise no navegador + 3 arquivos PHP em `deploy/api/` | canônica |
 
 ## Estado Atual
 
 | Área | Status |
 | --- | --- |
-| Backend canônico | `server/` com Fastify + TypeScript |
 | Frontend canônico | `react-app/` com React + Vite + TypeScript |
-| API ativa | `/api/health`, `/api/analyze`, `/api/extract-analyze`, `/api/totvs-login` |
-| CLI ativa | comandos Node em `server/src/cli/` |
-| Testes ativos | Node Test Runner em `server/src/**/*.test.ts` |
-| CI ativa | GitHub Actions com Node 24 |
-| Deploy principal | Docker Node 24 no DigitalOcean App Platform |
+| Análise e exportação | `react-app/src/lib/` e `react-app/src/utils/` (navegador) |
+| API ativa | `/api/health.php`, `/api/totvs-login.php`, `/api/extract-analyze.php` |
+| CLI | removida — os três fluxos existem no app web |
+| Testes ativos | Node Test Runner em `react-app/src/lib/*.test.ts` |
+| CI | GitHub Actions, job único de frontend |
+| Produção | Hostinger compartilhado, em `calendar.scalpel.com.br` |
 
-## O Que Não É Mais Canônico
+## Por que o backend Node saiu
 
-- Backend Python/Flask.
-- Dependências Python para execução principal.
-- Scripts antigos de migração como fonte de verdade.
+A hospedagem contratada é CloudLinux + LiteSpeed + PHP. Não há CloudLinux
+Node.js Selector, Passenger, `pm2` nem `crontab`, e o servidor web não faz
+proxy para porta arbitrária: não existe forma de manter um processo Node no ar.
+Como o backend só fazia análise (função pura) e um salto autenticado ao TOTVS,
+a análise foi para o navegador e o salto virou PHP.
 
-## Onde Consultar a Fonte de Verdade
+## Relacionados
 
 - [Manual do Projeto](../../DOCUMENTACAO.md)
 - [Arquitetura](ARCHITECTURE.md)
-- [Instalação](INSTALLATION.md)
-- [Referência da API](API_REFERENCE.md)
-
-## Implicação Para Novas Mudanças
-
-Novas features, correções e documentação devem considerar `server/` e `react-app/` como base. Se algum documento ou comentário mencionar Flask/Python como runtime atual, trate como informação desatualizada.
+- [Deploy](DEPLOY_HOSTINGER.md)

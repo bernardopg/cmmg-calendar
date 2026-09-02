@@ -8,40 +8,40 @@ Este guia descreve a arquitetura atual do CMMG Calendar para manutenção técni
 Usuário
   |
   v
-React SPA (react-app)
+React SPA (react-app)  ──── análise, estatísticas, CSV e ICS acontecem aqui
   |
-  | /api/analyze
-  | /api/extract-analyze
-  | /api/totvs-login
+  | /api/totvs-login.php
+  | /api/extract-analyze.php
   v
-Fastify API (server)
+API PHP (deploy/api)   ──── só o salto de rede
   |
-  | quando necessário
   v
 Portal TOTVS Educacional
 ```
 
-Em desenvolvimento, o Vite serve a SPA e faz proxy de `/api` para o Fastify. Em produção, o Fastify serve a API e os arquivos de `react-app/dist` no mesmo processo.
+A SPA é estática. O PHP existe por um motivo só: o portal do TOTVS não envia
+cabeçalhos CORS, então o navegador não consegue chamá-lo diretamente. Tudo o
+que é lógica pura ficou no cliente.
+
+Em desenvolvimento, o Vite serve a SPA e faz proxy de `/api` para produção
+(`VITE_API_PROXY_TARGET` sobrescreve). Em produção, o LiteSpeed serve os
+arquivos estáticos e executa os `.php` do mesmo docroot.
 
 ## Diretórios
 
 ```text
 react-app/
   src/
-    components/      # layout, UI, gráficos, resultados e upload
-    hooks/           # estado da API, tema, upload e análise
-    pages/           # rotas da SPA
-    types/           # tipos usados no frontend
-    utils/           # exportação e utilitários
-
-server/
-  src/
-    cli/             # comandos locais
-    routes/          # plugins Fastify por endpoint
-    services/        # regras de negócio e integração TOTVS
-    config.ts        # ambiente e paths
-    index.ts         # composição e bootstrap do servidor
-    types.ts         # contratos internos
+    components/   # layout, UI, gráficos, resultados e upload
+    hooks/        # estado da API, tema, upload e análise
+    lib/          # analyzeSchedule.ts + testes (funções puras)
+    pages/        # rotas da SPA
+    types/        # tipos usados no frontend
+    utils/        # exportação CSV/ICS e utilitários
+deploy/
+  api/            # _lib.php, health.php, totvs-login.php, extract-analyze.php
+  .htaccess       # fallback de rota da SPA, headers, cache
+scalpel-app.sh    # manifesto lido por ../../deploy/deploy.sh
 ```
 
 ## Frontend
@@ -58,103 +58,81 @@ Rotas principais:
 
 Hooks importantes:
 
-- `useApiHealth`: monitora `/api/health`.
-- `useFileUpload`: valida arquivo `.json` e formato mínimo `data.SHorarioAluno`.
-- `useScheduleAnalysis`: gerencia chamadas da API e cancela requisições antigas com `AbortController`.
+- `useApiHealth`: monitora `/api/health.php`.
+- `useFileUpload`: valida arquivo `.json` e o formato mínimo `data.SHorarioAluno`.
+- `useScheduleAnalysis`: analisa localmente no upload; nas consultas ao TOTVS,
+  chama a API PHP e cancela requisições antigas com `AbortController`.
 - `useToast`: feedback visual e limpeza de timers.
 
-Exportação web:
+Análise e exportação:
 
-- `exportToCSV`: gera `GoogleAgenda.csv`.
-- `exportToICS`: gera `ThunderbirdAgenda.ics`.
-- IDs são gerados com utilitário seguro, evitando fallback com `Math.random`.
+- `lib/analyzeSchedule.ts`: `extractScheduleEntries` valida a estrutura e
+  `analyzeScheduleDataJson` produz estatísticas, matérias, horários, locais,
+  dias da semana e distribuição mensal. Funções puras, cobertas por
+  `lib/analyzeSchedule.test.ts` (`node --test`, sem runner instalado).
+- `utils/exportUtils.ts`: `exportToCSV` gera `GoogleAgenda.csv`; `exportToICS`
+  gera `ThunderbirdAgenda.ics`.
+- IDs vêm de utilitário seguro, sem fallback com `Math.random`.
 
-## Backend
-
-`server/src/index.ts` monta o Fastify com:
-
-- logger com campos sensíveis redigidos;
-- headers básicos de segurança;
-- CORS seguro por padrão;
-- rate limit por rota;
-- upload multipart com limite de tamanho;
-- arquivos estáticos do frontend quando `react-app/dist` existe;
-- handlers padronizados de erro e not found.
-
-Rotas:
+## Backend PHP
 
 | Rota | Arquivo | Responsabilidade |
 | --- | --- | --- |
-| `GET /api/health` | `routes/health.ts` | Status da API. |
-| `POST /api/analyze` | `routes/analyze.ts` | Analisa upload JSON. |
-| `POST /api/extract-analyze` | `routes/extractAnalyze.ts` | Busca no TOTVS por cookie. |
-| `POST /api/totvs-login` | `routes/totvsLogin.ts` | Login TOTVS e extração. |
+| `GET /api/health.php` | `health.php` | Status da API. |
+| `POST /api/totvs-login.php` | `totvs-login.php` | Login no TOTVS e busca do horário. |
+| `POST /api/extract-analyze.php` | `extract-analyze.php` | Busca do horário com cookie de sessão. |
 
-Serviços:
+`_lib.php` concentra tudo: constantes do portal, respostas JSON, rate limit por
+IP em arquivo, a classe `TotvsSession` e os parsers. Não é endpoint — o
+`.htaccess` responde 403 no acesso direto.
 
-- `analyzeSchedule.ts`: transforma entries em estatísticas.
-- `scheduleEntries.ts`: extrai e valida `data.SHorarioAluno`.
-- `totvsClient.ts`: login, contexto, cookie jar e fetch do TOTVS.
-- `totvsParsers.ts`: parsing de erros, formulários e contexto TOTVS.
-- `exportSchedule.ts`: CSV/ICS para CLI.
+O fluxo de login reproduz o do Portal do Aluno, em sete passos:
 
-## TOTVS
+1. `GET` na página de login e extração de `__VIEWSTATE`,
+   `__VIEWSTATEGENERATOR`, `__EVENTVALIDATION` e dos aliases disponíveis.
+2. `POST` do formulário com usuário, senha e alias (padrão `CorporeRM`).
+3. Leitura do `Location` do redirecionamento — sem segui-lo.
+4. `GET` no portal para inicializar a sessão.
+5. `GET` em `AutoLoginPortal?key=<chave do fragmento do Location>`.
+6. Seleção do contexto acadêmico (`Contexto` e `Contexto/Selecao`).
+7. `GET` em `QuadroHorarioAluno`.
 
-O backend usa `TOTVS_BASE_URL` e monta endpoints padrão para CMMG. Quando necessário, cada endpoint pode ser sobrescrito por variável específica.
+Quatro detalhes que parecem arbitrários e não são:
 
-Fluxo de login:
+- **User-Agent de browser real.** O RM passa o UA pelo browser caps do
+  ASP.NET; um UA `Mozilla/5.0 (compatible; ...)` faz o portal devolver
+  ErrorPage com `FormatException` em vez do formulário.
+- **Cookies em memória.** `TotvsSession` reaproveita um único handle de curl
+  com `CURLOPT_COOKIEFILE => ''`; cookie jar em arquivo não preserva o
+  `.ASPXAUTH`, que é cookie de sessão.
+- **Sem seguir redirecionamento.** `CURLOPT_FOLLOWLOCATION => false`, porque a
+  chave do portal está no fragmento do `Location`.
+- **Cookie sem quebra de linha.** `extract-analyze.php` recusa `\r` e `\n`
+  para não permitir injeção de cabeçalho.
 
-1. Buscar formulário de login.
-2. Enviar credenciais.
-3. Executar auto-login.
-4. Buscar contextos acadêmicos.
-5. Selecionar contexto por alias ou default.
-6. Consultar `QuadroHorarioAluno`.
-7. Validar payload e analisar.
+## Deploy
 
-## Build e Produção
-
-`npm run build` gera:
-
-- `react-app/dist`
-- `server/dist`
-
-O Dockerfile tem dois estágios:
-
-| Estágio | Função |
-| --- | --- |
-| `builder` | instala dependências completas e compila frontend/backend |
-| `runner` | instala dependências de produção do servidor e roda `node server/dist/index.js` |
-
-O contêiner roda como usuário `node`, expõe `8080` e usa `HOST=0.0.0.0`.
+Publicado por `../../deploy/deploy.sh calendar`, que builda o frontend, envia
+`react-app/dist/` para o docroot do subdomínio e aplica `deploy/` por cima.
+Detalhes em [DEPLOY_HOSTINGER.md](DEPLOY_HOSTINGER.md).
 
 ## CI
 
-O workflow principal usa Node 24.
-
-Job `backend`:
-
-- instala dependências da raiz e do servidor;
-- executa testes;
-- compila TypeScript.
-
-Job `frontend`:
-
-- instala dependências do frontend;
-- executa lint;
-- executa `tsc --noEmit`;
-- executa build Vite.
+O workflow usa Node 24 e tem um job só, `frontend`: instala dependências,
+roda lint, `tsc --noEmit`, testes e build do Vite.
 
 ## Decisões Relevantes
 
-- Backend canônico é Node/Fastify; não há backend Python ativo.
-- Exportação da interface é client-side para evitar endpoints extras e manter download imediato.
-- CLI mantém exportação server-side para automação local.
-- CORS em produção é fechado por padrão.
-- Caminhos das CLIs são restritos à raiz do projeto para evitar path traversal.
+- **Nenhum processo persistente.** A hospedagem compartilhada não roda Node
+  como serviço, então análise e exportação foram para o navegador e o servidor
+  ficou reduzido a PHP. O backend Fastify em `server/` foi removido.
+- **Exportação client-side**, para o download ser imediato e não exigir
+  endpoint extra.
+- **Sem dependência nova para teste**: `node --test` roda TypeScript direto.
+- O arquivo de upload nunca sai do navegador.
 
 ## Relacionados
 
 - [Manual do Projeto](../../DOCUMENTACAO.md)
 - [Referência da API](API_REFERENCE.md)
-- [CLI](CLI.md)
+- [Deploy](DEPLOY_HOSTINGER.md)
