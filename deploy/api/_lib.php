@@ -64,7 +64,7 @@ function read_json_body(): array {
 
 /**
  * Rate limit por IP, com o contador em arquivo. Substitui o @fastify/rate-limit.
- * ponytail: arquivo basta para um host só; trocar por algo compartilhado apenas
+ * Nota: arquivo basta para um host só; trocar por algo compartilhado apenas
  * se um dia houver mais de um servidor.
  */
 function rate_limit(string $bucket, int $max, int $windowSeconds): void {
