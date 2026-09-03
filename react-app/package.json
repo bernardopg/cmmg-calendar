@@ -8,6 +8,10 @@
     "node": "^22.12.0 || >=24.0.0",
     "npm": ">=10"
   },
+  "overrides": {
+    "browserslist": "^4.28.7",
+    "@humanfs/node": "^0.16.8"
+  },
   "packageManager": "npm@11.11.0",
   "type": "module",
   "scripts": {
